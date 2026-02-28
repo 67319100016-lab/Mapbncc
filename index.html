@@ -16,17 +16,47 @@ body{ margin:0; font-family:system-ui,-apple-system; background:var(--bg); displ
 input,select,button{ width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd; }
 button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; border: none; cursor: pointer; font-weight: bold; }
 #info{ margin-top:10px; padding:15px; background:#f1f5f9; border-radius:8px; border-left: 4px solid #4dabf7; font-size: 14px; }
-#sidebar {
-    width: 100%; /* เปลี่ยนจาก 320px เป็นเต็มหน้าจอสำหรับมือถือ */
-    max-width: 320px;
-    /* ...โค้ดเดิม... */
+/* ปรับ Sidebar ให้เล็กลงและสะอาดตา */
+#sidebar { 
+    width: 260px; /* ลดจาก 320px เหลือ 260px เพื่อเพิ่มพื้นที่แผนที่ */
+    background: var(--panel); 
+    box-shadow: 2px 0 12px rgba(0,0,0,0.1); 
+    padding: 12px; /* ลดระยะห่างขอบ */
+    overflow-y: auto; 
+    z-index: 1000; 
+    transition: width 0.3s ease;
 }
 
-/* ปรับขนาดตัวอักษรและปุ่มให้กดง่ายขึ้นในมือถือ */
-input, select, button {
-    padding: 12px; /* ใหญ่ขึ้นเพื่อให้นิ้วกดง่าย */
-    font-size: 16px; /* ป้องกัน iOS ซูมหน้าจอตอนพิมพ์ */
+/* ปรับขนาดตัวอักษรและปุ่มให้เล็กลงแต่ยังกดง่าย */
+#sidebar h2 { font-size: 1.2rem; margin-bottom: 10px; }
+#sidebar h3, #sidebar h4 { font-size: 0.9rem; margin: 8px 0; }
+
+input, select, button { 
+    padding: 8px; /* ลดความสูงปุ่ม */
+    margin-bottom: 8px; 
+    font-size: 14px; /* ขนาดฟอนต์มาตรฐานมือถือ */
+    border-radius: 6px;
 }
+
+#info { 
+    padding: 10px; 
+    font-size: 13px; 
+    line-height: 1.4;
+}
+
+/* ปรับช่องผลการค้นหาให้พอดีกับแถบเมนูที่แคบลง */
+.search-results {
+    width: calc(260px - 24px); 
+    font-size: 13px;
+}
+
+/* สำหรับมือถือที่หน้าจอแคบมาก ๆ */
+@media (max-width: 480px) {
+    #sidebar { width: 220px; } /* ลดเหลือ 220px เพื่อให้เห็นแผนที่ด้านขวามากขึ้น */
+    .search-results { width: calc(220px - 24px); }
+}
+
+
 /* Modal Styles */
 .modal-overlay {
   position: fixed;
@@ -293,10 +323,16 @@ const collegePaths = {
     
 };
 
-const map = L.map('map').setView([13.675929, 100.616100], 17);
+// 1. ตั้งค่าการซูมให้ลึกถึงระดับ 20
+const map = L.map('map', {
+    maxZoom: 19, 
+    minZoom: 15
+}).setView([13.675929, 100.616100], 17);
+
+// 2. ปรับ TileLayer ให้ภาพชัดเจนไม่แตกในมือถือ
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    detectRetina: true, // ตรวจสอบหน้าจอความละเอียดสูงเพื่อให้ภาพชัดขึ้น
+    maxZoom: 20,
+    detectRetina: true, // หัวใจสำคัญที่ทำให้ภาพในมือถือชัดเจน
     attribution: '© OpenStreetMap'
 }).addTo(map);
 
@@ -374,26 +410,53 @@ function findRoute() {
     if (routeLine) map.removeLayer(routeLine);
     const start = buildings[startId];
     const end = buildings[endId];
+    
+    // เริ่มต้นที่พิกัดตึกเริ่มต้น
     let pathPoints = [ [start.lat, start.lng] ];
 
+    // นิยามกลุ่มอาคาร
     const upperZone = ["6", "7", "8", "9", "10", "11"];
     const bottomZone = ["5", "12"];
+    const midZone = ["1", "2", "3", "4"];
 
-    // Logic เชื่อมต่อจุด Nodes ตามกลุ่มอาคาร
-    if ((upperZone.includes(startId) || upperZone.includes(endId))) {
-        pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-        pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
-        if (["8", "9", "11"].includes(startId) || ["8", "9", "11"].includes(endId)) {
+    // --- Logic การเรียงลำดับจุดแวะพัก (Waypoints) ---
+
+    // 1. ถ้าเดินระหว่างโซนบน (8,9,10,11) กับ โซนล่าง/กลาง (1,2,3,4,5,12)
+    const isStartUpper = upperZone.includes(startId);
+    const isEndUpper = upperZone.includes(endId);
+
+    if (isStartUpper !== isEndUpper) {
+        // ต้องผ่านจุดเชื่อมหลักเพื่อไม่ให้ตัดทะลุตึก
+        if (isStartUpper) {
+            // เดินลง: ตึกบน -> หน้าตึก 8 -> แยกตึก 6 -> หน้าตึก 1
+            if (["8", "9", "11"].includes(startId)) pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
+            pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
+            pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
+        } else {
+            // เดินขึ้น: หน้าตึก 1 -> แยกตึก 6 -> หน้าตึก 8 -> ตึกบน
+            pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
+            pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
+            if (["8", "9", "11"].includes(endId)) pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
+        }
+    } 
+    // 2. ถ้าเดินภายในโซนบนด้วยกันเอง (เช่น 8 ไป 9)
+    else if (isStartUpper && isEndUpper) {
+        // ถ้ามีตึก 8, 9, 11 เกี่ยวข้อง ให้แวะหน้าตึก 8 เพื่อใช้ถนนหลัก
+        if ((["8", "9", "11"].includes(startId)) && (["8", "9", "11"].includes(endId))) {
+            // ไม่ต้องแวะหน้าตึก 1/6 ให้เส้นตรงหากันผ่านหน้าตึก 8
             pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
         }
     }
-    
+
+    // 3. ถ้าเกี่ยวข้องกับตึกโซนล่างสุด (5, 12)
     if (bottomZone.includes(startId) || bottomZone.includes(endId)) {
         pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
     }
 
+    // จบที่พิกัดตึกปลายทาง
     pathPoints.push([end.lat, end.lng]);
 
+    // วาดเส้นนำทาง
     routeLine = L.polyline(pathPoints, {
         color: '#4dabf7', weight: 6, opacity: 0.8, dashArray: '10, 15', lineJoin: 'round'
     }).addTo(map);
@@ -402,7 +465,6 @@ function findRoute() {
     closeModal();
     document.getElementById("info").innerHTML = `🧭 เส้นทาง: ${start.name} ➜ ${end.name}`;
 }
-
 function handleSearch() {
     const query = document.getElementById("search").value.toLowerCase().trim();
     const resultContainer = document.getElementById("searchResults");
