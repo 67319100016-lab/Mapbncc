@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>BNCC MAP - Complete Edition</title>
+<title>bncc map ice&Mo</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -135,7 +135,7 @@ button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; borde
 
 <body>
 <div id="sidebar">
-  <h2>BNCC MAP</h2>
+  <h2 style="color: #4dabf7; text-shadow: 1px 1px 3px rgba(77,171,247,0.3);"> BNCC Map</h2>
   <div style="position: relative;">
     <input id="search" placeholder="🔍 ค้นหาอาคารหรือห้อง..." oninput="handleSearch()" onkeydown="if(event.key === 'Enter') performSearch()">
     <div id="searchResults" class="search-results"></div>
@@ -324,7 +324,7 @@ const collegePaths = {
 
 // 1. ตั้งค่าการซูมให้ลึกถึงระดับ 20
 const map = L.map('map', {
-    maxZoom: 20, 
+    maxZoom: 18, 
     minZoom: 15
 }).setView([13.675929, 100.616100], 17);
 
@@ -401,6 +401,7 @@ function showBuilding(id, floor = null, room = null) {
     map.flyTo([b.lat, b.lng], 18, { animate: true, duration: 1.5 });
 }
 
+// ฟังก์ชันคำนวณระยะห่างระหว่างจุด 2 จุด (ใช้ Lat/Lng)
 function findRoute() {
     const startId = document.getElementById("from").value;
     const endId = document.getElementById("to").value;
@@ -410,52 +411,64 @@ function findRoute() {
     const start = buildings[startId];
     const end = buildings[endId];
     
-    // 1. เริ่มต้นที่ตึกต้นทาง
     let pathPoints = [ [start.lat, start.lng] ];
 
-    const upperZone = ["6", "7", "8", "9", "10", "11"];
-    const bottomZone = ["5", "12"];
+    // 💡 1. กำหนด "คู่ตึก" ที่เดินเป็นเส้นตรงหากันได้เลย (ไม่มีตึกขวางแน่นอน)
+    const directPaths = [
+        "8-9", "9-8",       // ตึก 8 กับ 9
+        "3-7", "7-3",       // ตึก 3 กับ 7
+        "4-7", "7-4",       // ตึก 4 กับ 7
+        "5-12", "12-5",     // ตึก 5 กับ โดม
+        "9-11", "11-9",     // ตึก 9 กับ สนามบอล
+        "8-11", "11-8",     // ตึก 8 กับ สนามบอล
+        "8-10", "10-8",     // ตึก 8 กับ คูหาลูกเสือ
+        "1-2", "2-1",       // ตึก 1 กับ ตึก 2
+        "2-3", "3-2",       // ตึก 2 กับ ตึก 3
+        "1-4", "4-1"        // ตึก 1 กับ ตึก 4
+    ];
 
-    // --- 2. Logic การเรียงลำดับจุดแวะตามทิศทางการเดินจริง ---
+    // สร้างรหัสคู่ตึกปัจจุบัน เช่น "3-7"
+    const routeKey = `${startId}-${endId}`;
 
-    // กรณี A: เดินจากโซนล่าง (5, 12) ขึ้นไปข้างบน
-    if (bottomZone.includes(startId)) {
-        pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]); // แวะจุดแยกหน้าโดมก่อน
-        pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]); // แล้วค่อยเข้าถนนหลักหน้าตึก 1
-        
-        if (upperZone.includes(endId)) {
-            pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
-            if (["8", "9", "11"].includes(endId)) pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
+    // 💡 2. เช็คว่าคู่นี้อยู่ในรายการที่เดินตรงได้ไหม?
+    if (directPaths.includes(routeKey)) {
+        // ถ้าใช่: ลากเส้นตรงหากันเลย ปลอดภัยไม่ทะลุตึกแน่นอน
+        pathPoints.push([end.lat, end.lng]);
+    } else {
+        // --- 3. ถ้าไม่ใช่คู่ที่ติดกัน ให้ใช้ Logic เดินตามถนนหลักเพื่ออ้อมตึก ---
+        const upperZone = ["6", "7", "8", "9", "10", "11"];
+        const bottomZone = ["5", "12"];
+
+        const isBothUpper = upperZone.includes(startId) && upperZone.includes(endId);
+        const isBothBottom = bottomZone.includes(startId) && bottomZone.includes(endId);
+
+        if (isBothUpper || isBothBottom) {
+            // เดินในโซนบน แต่ไม่ได้ติดกัน (เช่น 6 ไป 9)
+            if (isBothUpper && (["8", "9", "11"].includes(startId) || ["8", "9", "11"].includes(endId))) {
+                pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
+            }
+        } else {
+            // เดินข้ามโซน (บนลงล่าง หรือ ล่างขึ้นบน)
+            if (!upperZone.includes(startId) && upperZone.includes(endId)) {
+                if (bottomZone.includes(startId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
+                pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
+                pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
+                if (["8", "9", "11"].includes(endId)) pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
+            }
+            else if (upperZone.includes(startId) && !upperZone.includes(endId)) {
+                if (["8", "9", "11"].includes(startId)) pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
+                pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
+                pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
+                if (bottomZone.includes(endId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
+            }
+            else if (bottomZone.includes(startId) || bottomZone.includes(endId)) {
+                pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
+            }
         }
-    }
-    // กรณี B: เดินจากข้างบนลงมาโซนล่าง (5, 12)
-    else if (bottomZone.includes(endId)) {
-        if (upperZone.includes(startId)) {
-            if (["8", "9", "11"].includes(startId)) pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
-            pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
-        }
-        pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]); // มาที่หน้าตึก 1
-        pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]); // แล้วค่อยเลี้ยวเข้าจุดแยกหน้าโดม
-    }
-    // กรณี C: เดินข้ามโซน บน-กลาง (ไม่ได้แวะตึก 5, 12)
-    else if (upperZone.includes(startId) && !upperZone.includes(endId)) {
-        if (["8", "9", "11"].includes(startId)) pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
-        pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
-        pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-    }
-    else if (!upperZone.includes(startId) && upperZone.includes(endId)) {
-        pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-        pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
-        if (["8", "9", "11"].includes(endId)) pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
-    }
-    else if (upperZone.includes(startId) && upperZone.includes(endId)) {
-        pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
+        pathPoints.push([end.lat, end.lng]);
     }
 
-    // 3. ปิดท้ายด้วยตึกปลายทาง
-    pathPoints.push([end.lat, end.lng]);
-
-    // วาดเส้นและซูม
+    // วาดเส้นนำทาง
     routeLine = L.polyline(pathPoints, {
         color: '#4dabf7', weight: 6, opacity: 0.8, dashArray: '10, 15', lineJoin: 'round'
     }).addTo(map);
