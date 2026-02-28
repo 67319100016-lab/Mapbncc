@@ -18,31 +18,41 @@ button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; borde
 #info{ margin-top:10px; padding:15px; background:#f1f5f9; border-radius:8px; border-left: 4px solid #4dabf7; font-size: 14px; }
 /* ปรับ Sidebar ให้เล็กลงและสะอาดตา */
 
-/* สำหรับหน้าจอมือถือ ปรับสัดส่วนเป็น เมนู 30% : แผนที่ 70% */
+/* สำหรับหน้าจอมือถือ ปรับสัดส่วนเป็น เมนู 40% : แผนที่ 60% */
 @media (max-width: 600px) {
-    #sidebar { 
-        width: 30%; /* ปรับความกว้างเมนูเป็น 30% ของหน้าจอ */
-        min-width: 120px; /* ป้องกันเมนูแคบเกินไปจนอ่านไม่ออก */
-        padding: 8px; /* ลดช่องว่างภายในเพื่อประหยัดที่ */
-        font-size: 12px; /* ย่อขนาดตัวอักษรลงเล็กน้อย */
+    body {
+        display: flex;
+        flex-direction: row; /* ให้วางเรียงซ้ายขวาเหมือนเดิม */
     }
 
-    #sidebar h2 { font-size: 1rem; margin-bottom: 8px; }
+    #sidebar { 
+        width: 40%; /* ปรับความกว้างเมนูเป็น 40% */
+        min-width: 140px; /* กันเมนูเบี้ยวในจอที่แคบมาก */
+        padding: 10px; 
+        font-size: 13px;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+
+    #map-wrap { 
+        width: 60%; /* พื้นที่แผนที่ 60% */
+        flex: none; 
+    }
+
+    /* ปรับแต่งองค์ประกอบภายในให้พอดีกับ 40% */
+    #sidebar h2 { font-size: 1.1rem; margin-bottom: 8px; }
     
-    /* ปรับขนาด Input และปุ่มให้เล็กลงตามเมนู */
     input, select, button { 
-        padding: 6px; 
-        font-size: 11px; 
+        padding: 8px; 
+        font-size: 12px; 
         margin-bottom: 6px; 
     }
 
-    /* ปรับกล่องผลการค้นหาให้แคบลงตามเมนู */
     .search-results {
-        width: calc(100% - 16px);
-        font-size: 11px;
+        width: calc(100% - 20px);
+        font-size: 12px;
     }
 
-    #info { font-size: 11px; padding: 6px; }
+    #info { font-size: 12px; padding: 8px; }
 }
 
 
@@ -102,8 +112,8 @@ button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; borde
 
 /* สไตล์สำหรับวงกลมสีแดง */
 .red-circle-marker {
-    width: 17px;
-    height: 15px;
+    width: 13px;
+    height: 11px;
     background-color: #ff4d4d; /* สีแดง */
     border: 2.5px solid #ffffff; /* ขอบขาว */
     border-radius: 50%;
