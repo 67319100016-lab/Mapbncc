@@ -5,7 +5,7 @@
 <title>BNCC MAP - Complete Edition</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <style>
 :root { --bg:#f7f9fc; --panel:#ffffff; --primary:#4dabf7; --text:#212529; }
 *{box-sizing:border-box}
@@ -16,7 +16,17 @@ body{ margin:0; font-family:system-ui,-apple-system; background:var(--bg); displ
 input,select,button{ width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd; }
 button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; border: none; cursor: pointer; font-weight: bold; }
 #info{ margin-top:10px; padding:15px; background:#f1f5f9; border-radius:8px; border-left: 4px solid #4dabf7; font-size: 14px; }
+#sidebar {
+    width: 100%; /* เปลี่ยนจาก 320px เป็นเต็มหน้าจอสำหรับมือถือ */
+    max-width: 320px;
+    /* ...โค้ดเดิม... */
+}
 
+/* ปรับขนาดตัวอักษรและปุ่มให้กดง่ายขึ้นในมือถือ */
+input, select, button {
+    padding: 12px; /* ใหญ่ขึ้นเพื่อให้นิ้วกดง่าย */
+    font-size: 16px; /* ป้องกัน iOS ซูมหน้าจอตอนพิมพ์ */
+}
 /* Modal Styles */
 .modal-overlay {
   position: fixed;
@@ -284,7 +294,11 @@ const collegePaths = {
 };
 
 const map = L.map('map').setView([13.675929, 100.616100], 17);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    detectRetina: true, // ตรวจสอบหน้าจอความละเอียดสูงเพื่อให้ภาพชัดขึ้น
+    attribution: '© OpenStreetMap'
+}).addTo(map);
 
 let routeLine = null;
 const fromSelect = document.getElementById("from");
