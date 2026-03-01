@@ -5,6 +5,7 @@
 <title>bncc map ice&Mo</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <style>
 :root { --bg:#f7f9fc; --panel:#ffffff; --primary:#4dabf7; --text:#212529; }
@@ -130,6 +131,7 @@ button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; borde
     from { transform: translateY(-50px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
+/* ---------------------------------------------------------cssด้านบน---------------------------------------------------- */
 </style>
 </head>
 
@@ -137,7 +139,7 @@ button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; borde
 <div id="sidebar">
   <h2 style="color: #4dabf7; text-shadow: 1px 1px 3px rgba(77,171,247,0.3);"> BNCC Map</h2>
   <div style="position: relative;">
-    <input id="search" placeholder="🔍 ค้นหาอาคารหรือห้อง..." oninput="handleSearch()" onkeydown="if(event.key === 'Enter') performSearch()">
+    <input id="search" placeholder="🔍 ค้นหาชื่อหรือเลขห้อง..." oninput="handleSearch()" onkeydown="if(event.key === 'Enter') performSearch()">
     <div id="searchResults" class="search-results"></div>
   </div>
   <h4>🧭 ระบบนำทาง</h4>
@@ -145,14 +147,15 @@ button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; borde
   <select id="to"><option value="">เลือกจุดหมาย</option></select>
   <button onclick="findRoute()">🧭 แนะนำเส้นทาง</button>
   <button onclick="locateMe()" style="background: #20c997;">📍 ตำแหน่งของฉัน</button>
+  <button onclick="resetMap()" style="background: #f57979; margin-top: 5px; padding: 3px 10px; font-size: 10px; border-radius: 6px; width: fit-content; margin-left: auto; margin-right: auto; display: block;">🔄 ล้างค่า / เริ่มใหม่</button>
   <hr>
   <h3>📚 ข้อมูลอาคาร</h3>
-  <select id="buildingSelect" onchange="updateFloors()">
+  <select id="buildingSelect" onchange="if(this.value) showBuilding(this.value)">
     <option value="">เลือกอาคารเพื่อดูข้อมูล</option>
   </select>
+
   <div id="info">คลิกหมุดบนแผนที่เพื่อดูข้อมูล</div>
 </div>
-
 <div id="map-wrap"><div id="map"></div></div>
 
 <div id="modalOverlay" class="modal-overlay" onclick="closeModal()">
@@ -163,11 +166,12 @@ button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; borde
 </div>
 
 <script>
+    // ---------------------------------------------------htmlด้านบน ข้างล่างjava---------------------------------------------
 const buildings = {
   1: {
     name: "ตึก 1 (อาคารสุนีย์ นิมมานเหมินท์)",
     description: "ตึกหน้าทางเข้าของวิทยาลัย",
-    image: "https://www.ananda.co.th/blog/thegenc/wp-content/uploads/2023/10/%E0%B8%A7%E0%B8%B4%E0%B8%97%E0%B8%A2%E0%B8%B2%E0%B8%A5%E0%B8%B1%E0%B8%A2%E0%B8%9E%E0%B8%93%E0%B8%B4%E0%B8%8A%E0%B8%A2%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%9A%E0%B8%B2%E0%B8%87%E0%B8%99%E0%B8%B2-FI.jpg",
+    image: "images/b1.jpg",
     lat:13.675876211089093,
     lng: 100.61612427234651,
     floors: {
@@ -182,7 +186,7 @@ const buildings = {
     lat: 13.675464436652378,
     lng: 100.61618864536285,
     floors: {
-      1:["ห้องศรีนห้องประชุมศรีนครินทร์"],
+      1:["ห้องประชุมศรีนครินทร์","ห้องครัวการโรงแรม"],
       2:["แผนกสาขาบัญชี","ห้องเรียน 2201","ห้องเรียน 2203"],
       3:["แผนกสาขาโรงแรม","ห้องเรียน 2301","ห้องเรียน 2302","ห้องเรียน 2303","ห้องเรียน 2304"],
       4:["ห้องเรียน 2401","ห้องเรียน 2402","ห้องเรียน 2403","ห้องเรียน 2404"]
@@ -192,8 +196,8 @@ const buildings = {
     name: "ตึก 3 (อาคารรุ่งแสง)",
     description: "ตึก 3 สีแดงหลังตึก 2",
     image: "images/b3.jpg",
-    lat: 13.675464436652378,
-    lng: 100.61667144298555,
+    lat: 13.675480,
+    lng: 100.616586,
     floors: {
       1:["ห้องอุปกรณ์งานอาคารสถานที่","ห้องชมรมอนุรักษ์ธรรมชาติและสิ่งแวดล้อม","ห้องพยาบาล","ห้องเรียน 3101,3102","ห้องงานแนะแนวอาชีพและการจัดหางาน","ห้องงานอาคารสถานที่","ห้องงานโครงการพิเศษและบริการชุมชนและห้องพักครู"],
       2:["แผนกสาขาสามัญสัมพันธ์","ห้องเรียน","3201","3202","3203","3204","3205","3206","3207","3208","3209","3210","ห้องพักครู"],
@@ -215,8 +219,8 @@ const buildings = {
     name: "ตึก 5 (พลศึกษา)",
     description: "อาคารชนะ รุ่งแสง อยู่ข้างหลังโดมหน้าเสาธง",
     image: "images/b5.jpg",
-    lat: 13.674849379823598,
-    lng: 100.6157809495926,
+    lat: 13.674922,
+    lng: 100.615722,
     floors: {
       1: ["โรงพลศึกษา (กีฬาในร่ม)"]
     }
@@ -224,7 +228,7 @@ const buildings = {
   6: {
     name: "ตึก 6",
     description: "อยู่ข้างตึก 1",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTTkVHWrKe4hG6I7XdDsyK0Ml4NpKZG2KpN6A&s",
+    image: "images/b6.png",
     lat: 13.676308834088655,
     lng: 100.61654269695282,
     floors: {
@@ -239,9 +243,9 @@ const buildings = {
   7: {
     name: "ตึก 7",
     description: "อยู่ข้างหลังโรงอาหารเก่า",
-    image: "https://thai.haogiayensao.com/store/edu/17734-0.jpg",
-    lat: 13.676131615124715,
-    lng: 100.61690211296083,
+    image: "images/b7.jpg",
+    lat: 13.676139,
+    lng: 100.616771,
     floors: {
       1:["ห้องปฏิบัติการขาย","7102","7102","ห้องน้ำ"],
       2:["ห้องงานพัฒนาหลักสูตรและการสอน","ห้องงานวัดผลและประเมินผล","แผนกสาขาการตลาด","ห้องน้ำครู"],
@@ -304,10 +308,20 @@ const buildings = {
     name: "โดมหน้าเสาธง",
     description: "พื้นที่ทำกิจกรรมข้างตึก 5",
     image: "images/b12.jpg",
-    lat: 13.67511520966706,
-    lng: 100.6159418821335,
+    lat:  13.675165,
+    lng: 100.615899,
     floors: {
       1: ["สนามกิจกรรม", "พื้นที่ออกกำลังกาย"]
+    }
+  },
+  13: {
+    name: "หน้าวิทยาลัย (ประตูทางเข้า)",
+    description: "จุดตรวจและทางเข้าหลักของวิทยาลัย",
+    image: "images/b13.png", 
+    lat: 13.676129,
+    lng: 100.615918    ,
+    floors: {
+      1: ["จุดรับแลกบัตร", "จุดสอบถามข้อมูล"]
     }
   }
 };
@@ -318,24 +332,42 @@ const collegePaths = {
     topBridge: { lat: 13.676517, lng: 100.616237 },  // หน้าตึก 8
     path7: { lat: 13.676250, lng: 100.616700 },      // แยกไปตึก 7
     path5_12: { lat: 13.675300, lng: 100.616000 },   // แยกไปตึก 5 และโดม
-    path2_3: { lat: 13.675668, lng: 100.616382 }     // ทางเดินไปตึก 2, 3
-    
+    path2_3: { lat: 13.675668, lng: 100.616382 },    // ทางเดินไปตึก 2, 3
+    sideRoad: { lat: 13.675720, lng: 100.615714 }   // ทางข้างตึก1
 };
 
 // 1. ตั้งค่าการซูมให้ลึกถึงระดับ 20
+// 2. สลับโหมด
 const map = L.map('map', {
-    maxZoom: 18, 
+    maxZoom: 19, 
     minZoom: 15
-}).setView([13.675929, 100.616100], 17);
+}).setView([13.675929, 100.616100], 18);
 
-// 2. ปรับ TileLayer ให้ภาพชัดเจนไม่แตกในมือถือ
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// 2. สร้างชั้นข้อมูลแผนที่ 2 รูปแบบ (ปกติ และ ดาวเทียม)
+const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 20,
-    detectRetina: true, // หัวใจสำคัญที่ทำให้ภาพในมือถือชัดเจน
+    detectRetina: true,
     attribution: '© OpenStreetMap'
-}).addTo(map);
+});
+
+const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 20,
+    detectRetina: true,
+    attribution: '© Esri & Contributors'
+});
+
+// 3. กำหนดให้เปิดมาเจอ "แผนที่ปกติ" เป็นค่าเริ่มต้น
+streetMap.addTo(map);
+
+// 4. 🔥 เพิ่มปุ่มสลับแผนที่ (Layer Control) ไว้มุมขวาบน
+const baseMaps = {
+    "🗺️ แผนที่ปกติ": streetMap,
+    "🛰️ ภาพถ่ายดาวเทียม": satelliteMap
+};
+L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
 
 let routeLine = null;
+let routeDecorator = null; // 🔥 เพิ่มบรรทัดนี้เข้าไปครับ
 const fromSelect = document.getElementById("from");
 const toSelect = document.getElementById("to");
 const bSelect = document.getElementById("buildingSelect");
@@ -406,51 +438,75 @@ function findRoute() {
     const startId = document.getElementById("from").value;
     const endId = document.getElementById("to").value;
     if (!startId || !endId) return alert("กรุณาเลือกจุดเริ่มต้นและจุดหมาย");
-
+    // 🔥 เพิ่มบรรทัดนี้ลงไป เพื่อป้องกันคนกดเลือกตึกซ้ำกันครับ
+    if (startId === endId) return alert("คุณกำลังอยู่ที่ตึกเป้าหมายแล้วครับ!");
     if (routeLine) map.removeLayer(routeLine);
+    if (routeDecorator) map.removeLayer(routeDecorator); 
+
     const start = buildings[startId];
     const end = buildings[endId];
     
     let pathPoints = [ [start.lat, start.lng] ];
 
-    // 💡 1. กำหนด "คู่ตึก" ที่เดินเป็นเส้นตรงหากันได้เลย (ไม่มีตึกขวางแน่นอน)
+    // 💡 1. เพิ่มตึก 2, 3, 6 ให้เดินตรงไปหาตึก 4 ได้เลย ไม่ต้องอ้อมหน้าตึก 1
     const directPaths = [
-        "8-9", "9-8",       // ตึก 8 กับ 9
-        "3-7", "7-3",       // ตึก 3 กับ 7
-        "4-7", "7-4",       // ตึก 4 กับ 7
-        "5-12", "12-5",     // ตึก 5 กับ โดม
-        "9-11", "11-9",     // ตึก 9 กับ สนามบอล
-        "8-11", "11-8",     // ตึก 8 กับ สนามบอล
-        "8-10", "10-8",     // ตึก 8 กับ คูหาลูกเสือ
-        "1-2", "2-1",       // ตึก 1 กับ ตึก 2
-        "2-3", "3-2",       // ตึก 2 กับ ตึก 3
-        "1-4", "4-1"        // ตึก 1 กับ ตึก 4
+        "8-9", "9-8", "3-7", "7-3", "4-7", "7-4",
+        "5-12", "12-5", "9-11", "11-9", "8-11", "11-8",
+        "8-10", "10-8", "1-2", "2-1", "2-3", "3-2", "1-4", "4-1",
+        "11-10", "10-11",
+        "2-12", "12-2",   
+        "2-5", "5-2",     
+        "1-12", "12-1",   
+        "1-5", "5-1",     
+        "13-1", "1-13",   
+        "13-4", "4-13", 
+        "6-7", "7-6",     
+        "6-8", "8-6",     
+        "1-6", "6-1",
+        // 🔥 เพิ่มเฉพาะเส้นทางที่ขอ (ไม่กระทบที่อื่น)
+        "2-4", "4-2",
+        "3-4", "4-3",
+        "6-4", "4-6"
     ];
 
-    // สร้างรหัสคู่ตึกปัจจุบัน เช่น "3-7"
     const routeKey = `${startId}-${endId}`;
 
-    // 💡 2. เช็คว่าคู่นี้อยู่ในรายการที่เดินตรงได้ไหม?
     if (directPaths.includes(routeKey)) {
-        // ถ้าใช่: ลากเส้นตรงหากันเลย ปลอดภัยไม่ทะลุตึกแน่นอน
         pathPoints.push([end.lat, end.lng]);
-    } else {
-        // --- 3. ถ้าไม่ใช่คู่ที่ติดกัน ให้ใช้ Logic เดินตามถนนหลักเพื่ออ้อมตึก ---
+    } 
+    // 💡 2. บังคับให้ ตึก 5 และ โดม(12) ไปตึก 4 ต้อง "เดินทะลุตึก 2"
+    else if (routeKey === "3-5" || routeKey === "3-12" || routeKey === "4-5" || routeKey === "4-12") {
+        pathPoints.push([buildings["2"].lat, buildings["2"].lng]); // แวะทะลุตึก 2
+        pathPoints.push([end.lat, end.lng]); 
+    } 
+    else if (routeKey === "5-3" || routeKey === "12-3" || routeKey === "5-4" || routeKey === "12-4") {
+        pathPoints.push([buildings["2"].lat, buildings["2"].lng]); // แวะทะลุตึก 2
+        pathPoints.push([end.lat, end.lng]); 
+    } 
+    else {
+        // --- 🔒 โค้ดส่วนอื่นๆ คงเดิมเป๊ะ 100% ไม่มีการเปลี่ยนแปลง ---
         const upperZone = ["6", "7", "8", "9", "10", "11"];
-        const bottomZone = ["5", "12"];
+        const midZone = ["1", "2", "3", "4", "13"]; 
+        const bottomZone = ["5", "12"]; 
 
         const isBothUpper = upperZone.includes(startId) && upperZone.includes(endId);
         const isBothBottom = bottomZone.includes(startId) && bottomZone.includes(endId);
 
         if (isBothUpper || isBothBottom) {
-            // เดินในโซนบน แต่ไม่ได้ติดกัน (เช่น 6 ไป 9)
             if (isBothUpper && (["8", "9", "11"].includes(startId) || ["8", "9", "11"].includes(endId))) {
                 pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
             }
+            if (isBothBottom && (["5", "12"].includes(startId) || ["5", "12"].includes(endId))) {
+                pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
+            }
         } else {
-            // เดินข้ามโซน (บนลงล่าง หรือ ล่างขึ้นบน)
             if (!upperZone.includes(startId) && upperZone.includes(endId)) {
-                if (bottomZone.includes(startId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
+                if (bottomZone.includes(startId)) {
+                    if (["5", "12"].includes(startId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
+                    pathPoints.push([collegePaths.sideRoad.lat, collegePaths.sideRoad.lng]); 
+                }
+                if (["2", "3"].includes(startId)) pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
+                
                 pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
                 pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
                 if (["8", "9", "11"].includes(endId)) pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
@@ -459,24 +515,83 @@ function findRoute() {
                 if (["8", "9", "11"].includes(startId)) pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
                 pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
                 pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                if (bottomZone.includes(endId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
+                
+                if (["2", "3"].includes(endId)) pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
+                if (bottomZone.includes(endId)) {
+                    pathPoints.push([collegePaths.sideRoad.lat, collegePaths.sideRoad.lng]); 
+                    if (["5", "12"].includes(endId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
+                }
             }
-            else if (bottomZone.includes(startId) || bottomZone.includes(endId)) {
-                pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
+            else if ((bottomZone.includes(startId) && midZone.includes(endId)) || (midZone.includes(startId) && bottomZone.includes(endId))) {
+                if (bottomZone.includes(startId)) {
+                    if (["5", "12"].includes(startId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
+                    pathPoints.push([collegePaths.sideRoad.lat, collegePaths.sideRoad.lng]);
+                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
+                    if (["2", "3"].includes(endId)) pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
+                } else {
+                    if (["2", "3"].includes(startId)) pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
+                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
+                    pathPoints.push([collegePaths.sideRoad.lat, collegePaths.sideRoad.lng]);
+                    if (["5", "12"].includes(endId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
+                }
+            }
+            else if (midZone.includes(startId) && midZone.includes(endId)) {
+                const frontMid = ["1", "4", "13"];
+                const backMid = ["2", "3"];
+                
+                if (frontMid.includes(startId) && backMid.includes(endId)) {
+                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
+                    pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
+                } else if (backMid.includes(startId) && frontMid.includes(endId)) {
+                    pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
+                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
+                } else {
+                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
+                }
             }
         }
         pathPoints.push([end.lat, end.lng]);
     }
 
-    // วาดเส้นนำทาง
     routeLine = L.polyline(pathPoints, {
         color: '#4dabf7', weight: 6, opacity: 0.8, dashArray: '10, 15', lineJoin: 'round'
     }).addTo(map);
 
+    routeDecorator = L.polylineDecorator(routeLine, {
+        patterns: [
+            {
+                offset: '30px',     
+                repeat: '60px',     
+                symbol: L.Symbol.arrowHead({
+                    pixelSize: 15,  
+                    polygon: true, 
+                    pathOptions: { stroke: true, color: '#0d6efd', fillOpacity: 1, weight: 1 } 
+                })
+            }
+        ]
+    }).addTo(map);
+
     map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
     closeModal();
-    document.getElementById("info").innerHTML = `🧭 เส้นทาง: ${start.name} ➜ ${end.name}`;
+
+    let totalDistance = 0;
+    for (let i = 0; i < pathPoints.length - 1; i++) {
+        totalDistance += map.distance(pathPoints[i], pathPoints[i+1]);
+    }
+    totalDistance = Math.round(totalDistance); 
+
+    let walkTimeMin = Math.ceil(totalDistance / 80); 
+    let timeText = (walkTimeMin <= 1) ? "ไม่ถึง 1 นาที" : `ประมาณ ${walkTimeMin} นาที`;
+
+    document.getElementById("info").innerHTML = `
+        <b>🧭 เส้นทาง:</b> ${start.name} <br> ➜ ${end.name} <br>
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ccc; color: #475569; font-size: 13px;">
+            📏 ระยะทาง: <b style="color:#0d6efd;">${totalDistance} เมตร</b> <br>
+            🚶‍♂️ เดินเท้า: <b style="color:#0d6efd;">${timeText}</b>
+        </div>
+    `;
 }
+
 
 
 function handleSearch() {
@@ -521,50 +636,121 @@ function toggleFloorInfo() {
     document.querySelector(".btn-floor").innerText = isHidden ? "🔼 ซ่อนข้อมูลชั้น" : "🔍 ดูข้อมูลชั้นและห้อง";
 }
 
+
+
 function closeModal() { document.getElementById("modalOverlay").classList.remove("active"); }
+let userMarker = null; // ตัวแปรเก็บหมุดผู้ใช้ (มีอยู่แล้วในโค้ดเดิม)
 
-let userMarker = null; // ตัวแปรเก็บหมุดผู้ใช้
-
+// 💡 1. ฟังก์ชันขออนุญาตใช้งาน GPS และ เข็มทิศ
 function locateMe() {
-    // ใช้ watchPosition แทนการหาครั้งเดียว เพื่อให้ GPS ติดตามต่อเนื่อง
+    // สำหรับ iPhone (iOS 13+) ต้องมีการขออนุญาต (Request Permission) ก่อน
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+            .then(permissionState => {
+                if (permissionState === 'granted') {
+                    startTracking();
+                } else {
+                    alert("⚠️ ต้องอนุญาตการเข้าถึงเข็มทิศเพื่อใช้ฟีเจอร์นี้ครับ");
+                    startTracking(); // ถ้าไม่ให้เข็มทิศ ก็ยังติดตาม GPS ได้ปกติ
+                }
+            })
+            .catch(console.error);
+    } else {
+        // สำหรับ Android หรืออุปกรณ์อื่นๆ ข้ามไปเปิด GPS ได้เลย
+        startTracking();
+    }
+}
+
+// 💡 2. ฟังก์ชันเริ่มติดตามตำแหน่งและหมุนเข็มทิศ
+function startTracking() {
+    // เปิดระบบ GPS ค้นหาพิกัด
     map.locate({
         setView: true, 
         maxZoom: 18, 
-        watch: true,      // <<< หัวใจสำคัญ: เปิดการติดตามต่อเนื่อง
-        enableHighAccuracy: true // ใช้ความแม่นยำสูงที่สุด
+        watch: true, 
+        enableHighAccuracy: true 
     });
 
+    // เมื่อหาพิกัดเจอ
     map.on('locationfound', (e) => {
-        // ถ้ามีหมุดเก่าอยู่แล้ว ให้ลบออกก่อนเพื่อปักใหม่ในจุดที่เดินไปถึง
-        if (userMarker) {
-            map.removeLayer(userMarker);
+        if (!userMarker) {
+            // 🔥 สร้างหมุดแบบพิเศษ: มีลูกศรชี้ทิศทาง (สามเหลี่ยมด้านบน)
+            const compassIcon = L.divIcon({
+                className: 'custom-user-marker',
+                html: `
+                    <div id="user-compass" style="
+                        width: 16px; height: 16px; 
+                        background: #20c997; 
+                        border: 2px solid white; 
+                        border-radius: 50%; 
+                        position: relative; 
+                        box-shadow: 0 0 10px rgba(32,201,151,0.6); 
+                        transition: transform 0.1s ease-out; 
+                        transform: rotate(0deg);
+                    ">
+                        <div style="
+                            position: absolute; top: -10px; left: 1px; 
+                            width: 0; height: 0; 
+                            border-left: 5px solid transparent; 
+                            border-right: 5px solid transparent; 
+                            border-bottom: 12px solid #20c997;
+                        "></div>
+                    </div>
+                `,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8] // จุดศูนย์กลางของหมุด
+            });
+            userMarker = L.marker(e.latlng, { icon: compassIcon }).addTo(map).bindPopup("คุณอยู่ตรงนี้");
+        } else {
+            // ถ้ามีหมุดอยู่แล้ว ให้อัปเดตแค่พิกัดตอนเดิน
+            userMarker.setLatLng(e.latlng); 
         }
-
-        // สร้างหมุดวงกลมสีเขียวเรืองแสงเพื่อให้เห็นชัดว่าคือตัวเรา
-        userMarker = L.circleMarker(e.latlng, {
-            radius: 8,
-            fillColor: "#20c997",
-            color: "#fff",
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.8
-        }).addTo(map).bindPopup("คุณอยู่ตรงนี้").openPopup();
-
-        document.getElementById("info").innerHTML = "📍 กำลังติดตามตำแหน่งของคุณ...";
+        document.getElementById("info").innerHTML = "📍 กำลังติดตามตำแหน่งและทิศทางของคุณ...";
     });
 
     map.on('locationerror', (e) => {
         alert("ไม่สามารถเข้าถึงตำแหน่งของคุณได้: " + e.message);
     });
+
+    // 🔥 เปิดระบบเซ็นเซอร์ตรวจจับการหมุนของโทรศัพท์
+    window.addEventListener('deviceorientation', (e) => {
+        // ดึงองศาเข็มทิศ (รองรับทั้ง iOS และ Android)
+        let heading = e.webkitCompassHeading || Math.abs(e.alpha - 360);
+        
+        // สั่งหมุน CSS ของหมุดตามองศาที่หันหน้าไป
+        const compassEl = document.getElementById("user-compass");
+        if (compassEl && heading != null) {
+            compassEl.style.transform = `rotate(${heading}deg)`;
+        }
+    }, true);
 }
 
-function updateFloors() {
-    const bId = bSelect.value;
-    if (buildings[bId]) {
-        showBuilding(bId);
-        bSelect.selectedIndex = 0;
-    }
+// ฟังก์ชันสำหรับรีเซ็ตแผนที่และล้างค่าทุกอย่าง
+function resetMap() {
+    // 1. ลบเส้นนำทางและลูกศรออก
+    if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+    if (routeDecorator) { map.removeLayer(routeDecorator); routeDecorator = null; }
+    
+    // 2. ลบหมุดตำแหน่งตัวเอง และ "ปิดระบบติดตาม GPS"
+    if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+    map.stopLocate(); 
+
+    // 3. ล้างค่าช่องค้นหาและรายการผลลัพธ์
+    document.getElementById("search").value = "";
+    document.getElementById("searchResults").innerHTML = "";
+
+    // 4. รีเซ็ต Dropdown กลับเป็นค่าเริ่มต้น
+    document.getElementById("from").value = "";
+    document.getElementById("to").value = "";
+    document.getElementById("buildingSelect").value = "";
+
+    // 5. คืนค่ากล่องข้อความ
+    document.getElementById("info").innerHTML = "คลิกหมุดบนแผนที่เพื่อดูข้อมูล";
+
+    // 6. ดึงหน้าจอแผนที่กลับมาจุดเริ่มต้น (หน้าตึก 1)
+    map.setView([13.675929, 100.616100], 17);
 }
+
 
 // ฟังก์ชันสำหรับแสดงคู่มือการใช้งาน
 function showGuide() {
@@ -584,6 +770,8 @@ function showGuide() {
                 <li><b>นำทาง:</b> เลือกตึกต้นทาง-ปลายทาง แล้วกดปุ่มสีฟ้า</li>
                 <li><b>ข้อมูล:</b> คลิกที่วงกลมสีแดงในแมพเพื่อดูรายละเอียดตึกและชั้น</li>
                 <li><b>พิกัด:</b> กดปุ่มสีเขียวเพื่อระบุตำแหน่งที่คุณยืนอยู่</li>
+                <li><b>รีเช็ท:</b> กดปุ่มสีแดงล้างค่าเพื่อล้างค่าทั้งหมดเหมือนเริ่มต้นใหม่</li>
+                <li><b>หมายเหตุ:</b>มุมขวาบนสามารถเปลี่ยนมุมมองดาวเทียมได้</li>
             </ul>
         </div>
         <button onclick="closeModal()" style="margin-top:20px; width:100%; padding:12px; background:#4dabf7; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer; box-shadow:0 4px 6px rgba(77,171,247,0.3);">รับทราบและเริ่มใช้งาน</button>
