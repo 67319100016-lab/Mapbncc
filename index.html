@@ -1,182 +1,292 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<title>bncc map ice&Mo</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<style>
-:root { --bg:#f7f9fc; --panel:#ffffff; --primary:#4dabf7; --text:#212529; }
-*{box-sizing:border-box}
-body{ margin:0; font-family:system-ui,-apple-system; background:var(--bg); display:flex; height:100vh; overflow: hidden; }
-#sidebar{ width:320px; background:var(--panel); box-shadow:2px 0 12px rgba(0,0,0,.1); padding:16px; overflow-y: auto; z-index: 1000; }
-#map-wrap{ flex:1; position: relative; }
-#map { width: 100%; height: 100%; }
-input,select,button{ width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd; }
-button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; border: none; cursor: pointer; font-weight: bold; }
-#info{ margin-top:10px; padding:15px; background:#f1f5f9; border-radius:8px; border-left: 4px solid #4dabf7; font-size: 14px; }
-/* ปรับ Sidebar ให้เล็กลงและสะอาดตา */
-
-/* สำหรับหน้าจอมือถือ ปรับสัดส่วนเป็น เมนู 40% : แผนที่ 60% */
-@media (max-width: 600px) {
-    body {
-        display: flex;
-        flex-direction: row; /* ให้วางเรียงซ้ายขวาเหมือนเดิม */
-    }
-
-    #sidebar { 
-        width: 40%; /* ปรับความกว้างเมนูเป็น 40% */
-        min-width: 140px; /* กันเมนูเบี้ยวในจอที่แคบมาก */
-        padding: 10px; 
-        font-size: 13px;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    }
-
-    #map-wrap { 
-        width: 60%; /* พื้นที่แผนที่ 60% */
-        flex: none; 
-    }
-
-    /* ปรับแต่งองค์ประกอบภายในให้พอดีกับ 40% */
-    #sidebar h2 { font-size: 1.1rem; margin-bottom: 8px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Information System - Panichayakan Bangna</title>
     
-    input, select, button { 
-        padding: 8px; 
-        font-size: 12px; 
-        margin-bottom: 6px; 
-    }
+    <!-- PWA & Mobile Settings -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0077b6">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="images/b1.jpg">
 
-    .search-results {
-        width: calc(100% - 20px);
-        font-size: 12px;
-    }
+    <style>
+        :root {
+            --primary-blue: #0077b6;
+            --secondary-blue: #00b4d8;
+            --light-blue: #caf0f8;
+            --bg-body: #f8fbff;
+            --white: #ffffff;
+            --text-main: #2c3e50;
+            --text-muted: #546e7a;
+            --border-color: #e1e8ed;
+        }
 
-    #info { font-size: 12px; padding: 8px; }
-}
+        body.night {
+            --bg-body: #0b1120;
+            --white: #1e293b;
+            --primary-blue: #38bdf8;
+            --secondary-blue: #0ea5e9;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
 
+        * { box-sizing: border-box; }
 
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  backdrop-filter: blur(4px);
-}
-.modal-content {
-  background: white;
-  padding: 25px;
-  border-radius: 20px;
-  width: 90%;
-  max-width: 450px;
-  position: relative;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-  transform: translateY(20px);
-  transition: all 0.3s ease;
-}
-.modal-overlay.active { display: flex; }
-.close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #64748b; }
-#modalBody img { width: 100%; border-radius: 12px; margin-bottom: 15px; object-fit: cover; max-height: 250px; }
-#modalBody h2 { margin-top: 0; color: #0d6efd; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Sarabun', system-ui, -apple-system, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            transition: background 0.3s;
+        }
 
-.modal-floor-info {
-  margin-top: 15px;
-  text-align: left;
-  max-height: 200px;
-  overflow-y: auto;
-  background: #f1f5f9;
-  padding: 10px;
-  border-radius: 10px;
-  display: none;
-}
-.modal-floor-info ul { padding-left: 20px; margin: 5px 0; }
-.btn-floor { background: #6c757d; margin-top: 10px; }
+        header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            padding: 2.5rem 1rem;
+            color: white;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
 
-/* Search Suggestions */
-.search-results {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    max-height: 200px;
-    overflow-y: auto;
-    position: absolute;
-    width: calc(320px - 32px);
-    z-index: 2000;
-}
-.search-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 14px; color: #333; }
-.search-item:hover { background: #f0f7ff; color: #0d6efd; }
+        header h1 { margin: 0; font-size: 1.8rem; }
+        header p { margin: 0.5rem 0 0; opacity: 0.9; font-weight: 300; }
 
-/* สไตล์สำหรับวงกลมสีแดง */
-.red-circle-marker {
-    width: 13px;
-    height: 11px;
-    background-color: #ff4d4d; /* สีแดง */
-    border: 2.5px solid #ffffff; /* ขอบขาว */
-    border-radius: 50%;
-    box-shadow: 0 0 10px rgba(255, 77, 77, 0.6); /* เงาเรืองแสง */
-    display: block;
-}
+        .search-area {
+            background: var(--white);
+            margin: -25px auto 10px;
+            width: 90%;
+            max-width: 1100px;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            z-index: 10;
+            position: relative;
+        }
 
-.modal-content {
-    /* ...โค้ดเดิมของคุณ... */
-    animation: slideIn 0.4s ease-out; /* เพิ่มการเคลื่อนไหวตอนเด้ง */
-}
+        .quick-filters {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin: 0 auto 20px;
+            width: 90%;
+            max-width: 1100px;
+        }
 
-@keyframes slideIn {
-    from { transform: translateY(-50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-/* ---------------------------------------------------------cssด้านบน---------------------------------------------------- */
-</style>
+        .quick-btn {
+            cursor: pointer;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 6px 16px;
+            background: var(--white);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: var(--light-blue);
+            color: var(--primary-blue);
+            border-color: var(--secondary-blue);
+        }
+
+        input, select {
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-body);
+            color: var(--text-main);
+            font-size: 1rem;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            padding: 0 5% 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        main.full-width { grid-template-columns: 1fr; }
+
+        .card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            height: fit-content;
+        }
+
+        .building-detail h2 { color: var(--primary-blue); margin-top: 0; }
+        
+        .building-img-wrapper {
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .building-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+        .nav-btn {
+            display: none;
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: #25d366;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);
+            transition: background 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: #1eb857;
+        }
+
+        /* Building Grid */
+        .building-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .building-card {
+            background: var(--white);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .building-card:hover { transform: translateY(-5px); border-color: var(--secondary-blue); }
+        .card-img { width: 100%; height: 150px; object-fit: cover; }
+        .card-info { padding: 15px; }
+
+        /* Room List */
+        .room-item {
+            padding: 15px;
+            background: var(--bg-body);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .room-icon {
+            width: 40px; height: 40px;
+            background: var(--white);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            border: 1px solid var(--light-blue);
+        }
+
+        .highlight-item { background: var(--light-blue) !important; border-color: var(--primary-blue) !important; }
+
+        .back-btn {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: var(--light-blue);
+            color: var(--primary-blue);
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .night-mode-toggle {
+            position: fixed; bottom: 20px; right: 20px;
+            background: var(--primary-blue); color: white;
+            border: none; padding: 15px; border-radius: 50%;
+            cursor: pointer; z-index: 1000;
+        }
+
+        @media (max-width: 900px) {
+            main { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
-
 <body>
-<div id="sidebar">
-  <h2 style="color: #4dabf7; text-shadow: 1px 1px 3px rgba(77,171,247,0.3);"> BNCC Map</h2>
-  <div style="position: relative;">
-    <input id="search" placeholder="🔍 ค้นหาชื่อหรือเลขห้อง..." oninput="handleSearch()" onkeydown="if(event.key === 'Enter') performSearch()">
-    <div id="searchResults" class="search-results"></div>
-  </div>
-  <h4>🧭 ระบบนำทาง</h4>
-  <select id="from"><option value="">เลือกจุดเริ่มต้น</option></select>
-  <select id="to"><option value="">เลือกจุดหมาย</option></select>
-  <button onclick="findRoute()">🧭 แนะนำเส้นทาง</button>
-  <button onclick="locateMe()" style="background: #20c997;">📍 ตำแหน่งของฉัน</button>
-  <button onclick="resetMap()" style="background: #f57979; margin-top: 5px; padding: 3px 10px; font-size: 10px; border-radius: 6px; width: fit-content; margin-left: auto; margin-right: auto; display: block;">🔄 ล้างค่า / เริ่มใหม่</button>
-  <hr>
-  <h3>📚 ข้อมูลอาคาร</h3>
-  <select id="buildingSelect" onchange="if(this.value) showBuilding(this.value)">
-    <option value="">เลือกอาคารเพื่อดูข้อมูล</option>
-  </select>
 
-  <div id="info">คลิกหมุดบนแผนที่เพื่อดูข้อมูล</div>
-</div>
-<div id="map-wrap"><div id="map"></div></div>
+<header>
+    <h1>🏢 พณิชยการบางนา</h1>
+    <p>ระบบสืบค้นข้อมูลอาคารและห้องเรียนออนไลน์</p>
+</header>
 
-<div id="modalOverlay" class="modal-overlay" onclick="closeModal()">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <span class="close-btn" onclick="closeModal()">&times;</span>
-    <div id="modalBody"></div>
-  </div>
+<div class="search-area">
+    <input id="search" type="text" placeholder="🔍 ค้นหาชื่อห้องหรือเลขห้อง..." oninput="handleSearch()">
+    <select id="buildingSelect" onchange="onBuildingChange()">
+        <option value="">-- เลือกอาคาร --</option>
+    </select>
+    <select id="floorSelect" onchange="showRooms()">
+        <option value="">-- เลือกชั้น --</option>
+    </select>
 </div>
+
+<div class="quick-filters">
+    <button class="quick-btn" onclick="filterByType('ห้องพักครู')">👨‍🏫 ห้องพักครู</button>
+    <button class="quick-btn" onclick="filterByType('ประชุม')">🤝 ห้องประชุม</button>
+    <button class="quick-btn" onclick="filterByType('ห้องน้ำ')">🚻 ห้องน้ำ</button>
+    <button class="quick-btn" onclick="filterByType('คอมพิวเตอร์')">💻 ห้องคอมฯ</button>
+</div>
+
+<main id="mainContainer" class="full-width">
+    <section class="card building-detail">
+        <button id="backBtn" class="back-btn" onclick="resetToHome()">⬅️ กลับหน้าหลัก</button>
+        <h2 id="bName">🏛️ รายชื่ออาคารทั้งหมด</h2>
+        <p id="bDesc">กรุณาเลือกอาคารเพื่อดูข้อมูล</p>
+        <div id="imgWrapper" class="building-img-wrapper">
+            <img id="bImg" src="" alt="Building Image">
+        </div>
+        <button id="navBtn" class="nav-btn" onclick="getNavigation()">
+            📍 นำทางไปยังอาคารนี้ด้วย Google Maps
+        </button>
+        <div id="buildingGrid" class="building-grid"></div>
+    </section>
+
+    <section id="roomContainer" class="card" style="display: none;">
+        <h3 id="floorTitle">🏫 รายชื่อห้องเรียน</h3>
+        <div id="roomList"></div>
+    </section>
+</main>
+
+<button class="night-mode-toggle" onclick="toggleNight()">🌓</button>
 
 <script>
-    // ---------------------------------------------------htmlด้านบน ข้างล่างjava---------------------------------------------
 const buildings = {
   1: {
     name: "ตึก 1 (อาคารสุนีย์ นิมมานเหมินท์)",
     description: "ตึกหน้าทางเข้าของวิทยาลัย",
     image: "images/b1.jpg",
-    lat:13.675876211089093,
+    lat: 13.675876211089093,
     lng: 100.61612427234651,
     floors: {
-      1:["แผนกสาขาธุรกิจค้าปลีก","ห้องผู้อำนวยการวิทยาลัย","ห้องรองผู้อำนวยการวิทยาลัย","ห้องการเงิน","ห้องบุคลากร","ห้องบัญชี","ห้องบริหารงานทั่วไป","ห้องประชุมสุวรรณภูมิ","ห้องควบคุมสารสนเทศ","ห้องประชาสัมพันธ์","ห้องพักครู","ห้องปกครอง"],
-      2:["แผนกสาขาการโรงแรม","ห้องงานทะเบียน","2ห้องชมรมพุทธศาสนา","ห้องประชุมมูลนิธิฯ","ห้องบางนาเน็ต"]
+      1: ["แผนกสาขาธุรกิจค้าปลีก","ห้องผู้อำนวยการวิทยาลัย","ห้องรองผู้อำนวยการวิทยาลัย","ห้องการเงิน","ห้องบุคลากร","ห้องบัญชี","ห้องบริหารงานทั่วไป","ห้องประชุมสุวรรณภูมิ","ห้องควบคุมสารสนเทศ","ห้องประชาสัมพันธ์","ห้องพักครู","ห้องปกครอง"],
+      2: ["แผนกสาขาการโรงแรม","ห้องงานทะเบียน","ห้องชมรมพุทธศาสนา","ห้องประชุมมูลนิธิฯ","ห้องบางนาเน็ต"]
     }
   },
   2: {
@@ -186,10 +296,10 @@ const buildings = {
     lat: 13.675464436652378,
     lng: 100.61618864536285,
     floors: {
-      1:["ห้องประชุมศรีนครินทร์","ห้องครัวการโรงแรม"],
-      2:["แผนกสาขาบัญชี","ห้องเรียน 2201","ห้องเรียน 2203"],
-      3:["แผนกสาขาโรงแรม","ห้องเรียน 2301","ห้องเรียน 2302","ห้องเรียน 2303","ห้องเรียน 2304"],
-      4:["ห้องเรียน 2401","ห้องเรียน 2402","ห้องเรียน 2403","ห้องเรียน 2404"]
+      1: ["ห้องประชุมศรีนครินทร์","ห้องครัวการโรงแรม"],
+      2: ["แผนกสาขาบัญชี","ห้องเรียน 2201","ห้องเรียน 2203"],
+      3: ["แผนกสาขาโรงแรม","ห้องเรียน 2301","ห้องเรียน 2302","ห้องเรียน 2303","ห้องเรียน 2304"],
+      4: ["ห้องเรียน 2401","ห้องเรียน 2402","ห้องเรียน 2403","ห้องเรียน 2404"]
     }
   },
   3: {
@@ -199,10 +309,10 @@ const buildings = {
     lat: 13.675480,
     lng: 100.616586,
     floors: {
-      1:["ห้องอุปกรณ์งานอาคารสถานที่","ห้องชมรมอนุรักษ์ธรรมชาติและสิ่งแวดล้อม","ห้องพยาบาล","ห้องเรียน 3101,3102","ห้องงานแนะแนวอาชีพและการจัดหางาน","ห้องงานอาคารสถานที่","ห้องงานโครงการพิเศษและบริการชุมชนและห้องพักครู"],
-      2:["แผนกสาขาสามัญสัมพันธ์","ห้องเรียน","3201","3202","3203","3204","3205","3206","3207","3208","3209","3210","ห้องพักครู"],
-      3:["ห้องเรียน 3301","ห้องเรียน 3302","ห้องเรียน 3303","ห้องเรียน 3304","ห้องเรียน 3305","ห้องเรียน 3306","ห้องเรียน 3307","ห้องเรียน 3308","ห้องเรียน 3309","ห้องเรียน 3310","ห้องพักครู"],
-      4:["ห้องเรียน 3401","ห้องเรียน 3402","ห้องเรียน 3403","ห้องเรียน 3404","ห้องเรียน 3405","ห้องเรียน 3406","ห้องเรียน 3407","ห้องเรียน 3408","ห้องเรียน 3409","ห้องเรียน 3410","ห้องพักครู"]
+      1: ["ห้องอุปกรณ์งานอาคารสถานที่","ห้องชมรมอนุรักษ์ธรรมชาติและสิ่งแวดล้อม","ห้องพยาบาล","ห้องเรียน 3101,3102","ห้องงานแนะแนวอาชีพและการจัดหางาน","ห้องงานอาคารสถานที่","ห้องงานโครงการพิเศษและบริการชุมชนและห้องพักครู"],
+      2: ["แผนกสาขาสามัญสัมพันธ์","ห้องเรียน 3201","ห้องเรียน 3202","ห้องเรียน 3203","ห้องเรียน 3204","ห้องเรียน 3205","ห้องเรียน 3206","ห้องเรียน 3207","ห้องเรียน 3208","ห้องเรียน 3209","ห้องเรียน 3210","ห้องพักครู"],
+      3: ["ห้องเรียน 3301","ห้องเรียน 3302","ห้องเรียน 3303","ห้องเรียน 3304","ห้องเรียน 3305","ห้องเรียน 3306","ห้องเรียน 3307","ห้องเรียน 3308","ห้องเรียน 3309","ห้องเรียน 3310","ห้องพักครู"],
+      4: ["ห้องเรียน 3401","ห้องเรียน 3402","ห้องเรียน 3403","ห้องเรียน 3404","ห้องเรียน 3405","ห้องเรียน 3406","ห้องเรียน 3407","ห้องเรียน 3408","ห้องเรียน 3409","ห้องเรียน 3410","ห้องพักครู"]
     }
   },
   4: {
@@ -232,12 +342,12 @@ const buildings = {
     lat: 13.676308834088655,
     lng: 100.61654269695282,
     floors: {
-      1:["ห้องงานพัสดุ","ห้องสำนักงานสมาคมศิษย์เก่าพณิชยการบางนา","ห้องน้ำ"],
-      2:["ห้องงานสื่อการเรียนการสอน","ห้องเก็บอุปกรณ์","ห้องน้ำ"],
-      3:["ห้องประชุมสุขุมวิท","ห้องรับรองวิทยากร","ห้องน้ำ"],
-      4:["ห้องเรียน 6401","ห้องเรียน 6402","ห้องเรียน 6403","ห้องเรียน 6404","ห้องอเนกประสงค์","ห้องพักครู"],
-      5:["ห้องเรียนเทคโนโลยีบัณฑิต","ห้องเรียน 6501","ห้องเรียน 6502","ห้องเรียน 6503","ห้องเรียน 6504","ห้องเรียน 6505","ห้องเรียน 6506"],
-      6:["แผนกสาขาการจัดการโลจิสติกส์","ห้องเรียน 6601","ห้องเรียน 6602","ห้องเรียน 6603","ห้องเรียน 6604","ห้องเรียน 6605"]
+      1: ["ห้องงานพัสดุ","ห้องสำนักงานสมาคมศิษย์เก่าพณิชยการบางนา","ห้องน้ำ"],
+      2: ["ห้องงานสื่อการเรียนการสอน","ห้องเก็บอุปกรณ์","ห้องน้ำ"],
+      3: ["ห้องประชุมสุขุมวิท","ห้องรับรองวิทยากร","ห้องน้ำ"],
+      4: ["ห้องเรียน 6401","ห้องเรียน 6402","ห้องเรียน 6403","ห้องเรียน 6404","ห้องอเนกประสงค์","ห้องพักครู"],
+      5: ["ห้องเรียนเทคโนโลยีบัณฑิต","ห้องเรียน 6501","ห้องเรียน 6502","ห้องเรียน 6503","ห้องเรียน 6504","ห้องเรียน 6505","ห้องเรียน 6506"],
+      6: ["แผนกสาขาการจัดการโลจิสติกส์","ห้องเรียน 6601","ห้องเรียน 6602","ห้องเรียน 6603","ห้องเรียน 6604","ห้องเรียน 6605"]
     }
   },
   7: {
@@ -247,13 +357,13 @@ const buildings = {
     lat: 13.676139,
     lng: 100.616771,
     floors: {
-      1:["ห้องปฏิบัติการขาย","7102","7102","ห้องน้ำ"],
-      2:["ห้องงานพัฒนาหลักสูตรและการสอน","ห้องงานวัดผลและประเมินผล","แผนกสาขาการตลาด","ห้องน้ำครู"],
-      3:["ห้องเรียน 7301","ห้องเรียน 7302","ห้องเรียน 7303","ห้องเรียน 7304","ห้องเรียน 7305","ห้องเรียน 7306","ห้องเรียน 7307","ห้องเรียน 7308","ห้องพักครู","ห้องน้ำครู"],
-      4:["ห้องเรียน 7401","ห้องเรียน 7402","ห้องเรียน 7403","ห้องเรียน 7404","ห้องเรียน 7405","ห้องเรียน 7406","ห้องเรียน 7407","ห้องเรียน 7408","ห้องพักครู","ห้องน้ำครู"],
-      5:["แผนกสาขาจัดการ","ห้องเรียน 7501","ห้องเรียน 7502","ห้องเรียน 7503","ห้องเรียน 7504","ห้องเรียน 7505","ห้องเรียน 7506","ห้องเรียน 7507","ห้องน้ำครู"],
-      6:["ห้องเรียน 7601","ห้องเรียน 7602","ห้องเรียน 7603","ห้องเรียน 7604","ห้องเรียน 7605","ห้องเรียน 7606","ห้องเรียน 7607","ห้องเรียน 7608","ห้องพักครู","ห้องน้ำครู"],
-      7:["ห้องเรียน 7701","ห้องเรียน 7702","ห้องเรียน 7703","ห้องเรียน 7704","ห้องเรียน 7705","ห้องเรียน 7706","ห้องเรียน 7707","ห้องเรียน 7708","คณะวิชาการเลขานุการ","ห้องน้ำครู"]
+      1: ["ห้องปฏิบัติการขาย","7102","ห้องน้ำ"],
+      2: ["ห้องงานพัฒนาหลักสูตรและการสอน","ห้องงานวัดผลและประเมินผล","แผนกสาขาการตลาด","ห้องน้ำครู"],
+      3: ["ห้องเรียน 7301","ห้องเรียน 7302","ห้องเรียน 7303","ห้องเรียน 7304","ห้องเรียน 7305","ห้องเรียน 7306","ห้องเรียน 7307","ห้องเรียน 7308","ห้องพักครู","ห้องน้ำครู"],
+      4: ["ห้องเรียน 7401","ห้องเรียน 7402","ห้องเรียน 7403","ห้องเรียน 7404","ห้องเรียน 7405","ห้องเรียน 7406","ห้องเรียน 7407","ห้องเรียน 7408","ห้องพักครู","ห้องน้ำครู"],
+      5: ["แผนกสาขาจัดการ","ห้องเรียน 7501","ห้องเรียน 7502","ห้องเรียน 7503","ห้องเรียน 7504","ห้องเรียน 7505","ห้องเรียน 7506","ห้องเรียน 7507","ห้องน้ำครู"],
+      6: ["ห้องเรียน 7601","ห้องเรียน 7602","ห้องเรียน 7603","ห้องเรียน 7604","ห้องเรียน 7605","ห้องเรียน 7606","ห้องเรียน 7607","ห้องเรียน 7608","ห้องพักครู","ห้องน้ำครู"],
+      7: ["ห้องเรียน 7701","ห้องเรียน 7702","ห้องเรียน 7703","ห้องเรียน 7704","ห้องเรียน 7705","ห้องเรียน 7706","ห้องเรียน 7707","ห้องเรียน 7708","คณะวิชาการเลขานุการ","ห้องน้ำครู"]
     }
   },
   8: {
@@ -263,9 +373,9 @@ const buildings = {
     lat: 13.676762305536153,
     lng: 100.61601161956787,
     floors: {
-      1:["ลานอเนกประสงค์ใช้ทำกิจกรรมต่างๆ","ห้องชมรมเลขานุการ","ห้องอธท","ห้องประชุมพันธ์ทิพย์"],
-      2:["โรงอาหาร","ห้องน้ำ","ห้องอาหารครู"],
-      3:["ห้องประชุมใหญ่","ห้องน้ำ","ห้องควบคุมเสียง แสง และห้องกำกับเวที"]
+      1: ["ลานอเนกประสงค์ใช้ทำกิจกรรมต่างๆ","ห้องชมรมเลขานุการ","ห้องอธท","ห้องประชุมพันธ์ทิพย์"],
+      2: ["โรงอาหาร","ห้องน้ำ","ห้องอาหารครู"],
+      3: ["ห้องประชุมใหญ่","ห้องน้ำ","ห้องควบคุมเสียง แสง และห้องกำกับเวที"]
     }
   },
   9: {
@@ -275,13 +385,13 @@ const buildings = {
     lat: 13.677095893169858,
     lng: 100.61555027961732,
     floors: {
-      1:["ห้องทวิภาคี","ห้องแผนกสาขาวิชาธุรกิจค้าปลีก","ห้องเรียน 9102","ห้องน้ำ"],
-      2:["สำนักงานฝ่ายแผนงาน","ห้องประชุมอาคาร 9","ห้องงานวางแผนและ งบประมาณ","ห้องงานศูนย์ข้อมูลสารสนเทศ","ห้องงานวิจัยพัฒนาและ มาตรฐานการศึกษา"],
-      3:["ห้องสมุดของวิทยาลัย","ห้องศูนย์อินเตอร์เน็ต","ห้องเรียน 9301"," ห้องเรียน 9302","ห้องเรียน 9303","ห้องน้ำ"],
-      4:["แผนกสาขาภาษาต่างประเทศ","ห้องเรียน 9401","ห้องเรียน 9402","ห้องเรียน 9403","ห้องเรียน 9404","ห้องเรียน 9405","ห้องเรียน 9406","ห้องเรียน 9409"],
-      5:["ห้องเรียน 9501","ห้องเรียน 9502","ห้องเรียน 9503","ห้องเรียน 9504","ห้องเรียน 9505","ห้องเรียน 9506"],
-      6:["ห้องพักครู","แผนกสาขาคอมพิวเตอร์","ห้องเรียน 9601","ห้องเรียน 9602","ห้องเรียน 9605","ห้องเรียน 9606"],
-      7:["แผนกสาขาเทคโนโลยีสารสนเทศ","ห้องพักครู","ห้องเรียน 9701","ห้องเรียน 9702","ห้องเรียน 9705","ห้องเรียน 9706"]
+      1: ["ห้องทวิภาคี","ห้องแผนกสาขาวิชาธุรกิจค้าปลีก","ห้องเรียน 9102","ห้องน้ำ"],
+      2: ["สำนักงานฝ่ายแผนงาน","ห้องประชุมอาคาร 9","ห้องงานวางแผนและ งบประมาณ","ห้องงานศูนย์ข้อมูลสารสนเทศ","ห้องงานวิจัยพัฒนาและ มาตรฐานการศึกษา"],
+      3: ["ห้องสมุดของวิทยาลัย","ห้องศูนย์อินเตอร์เน็ต","ห้องเรียน 9301","ห้องเรียน 9302","ห้องเรียน 9303","ห้องน้ำ"],
+      4: ["แผนกสาขาภาษาต่างประเทศ","ห้องเรียน 9401","ห้องเรียน 9402","ห้องเรียน 9403","ห้องเรียน 9404","ห้องเรียน 9405","ห้องเรียน 9406","ห้องเรียน 9409"],
+      5: ["ห้องเรียน 9501","ห้องเรียน 9502","ห้องเรียน 9503","ห้องเรียน 9504","ห้องเรียน 9505","ห้องเรียน 9506"],
+      6: ["ห้องพักครู","แผนกสาขาคอมพิวเตอร์","ห้องเรียน 9601","ห้องเรียน 9602","ห้องเรียน 9605","ห้องเรียน 9606"],
+      7: ["แผนกสาขาเทคโนโลยีสารสนเทศ","ห้องพักครู","ห้องเรียน 9701","ห้องเรียน 9702","ห้องเรียน 9705","ห้องเรียน 9706"]
     }
   },
   10: {
@@ -308,7 +418,7 @@ const buildings = {
     name: "โดมหน้าเสาธง",
     description: "พื้นที่ทำกิจกรรมข้างตึก 5",
     image: "images/b12.jpg",
-    lat:  13.675165,
+    lat: 13.675165,
     lng: 100.615899,
     floors: {
       1: ["สนามกิจกรรม", "พื้นที่ออกกำลังกาย"]
@@ -319,469 +429,157 @@ const buildings = {
     description: "จุดตรวจและทางเข้าหลักของวิทยาลัย",
     image: "images/b13.png", 
     lat: 13.676129,
-    lng: 100.615918    ,
+    lng: 100.615918,
     floors: {
       1: ["จุดรับแลกบัตร", "จุดสอบถามข้อมูล"]
     }
   }
 };
 
-const collegePaths = {
-    centerMain: { lat: 13.676053, lng: 100.616017 }, // หน้าตึก 1
-    junction6: { lat: 13.676403, lng: 100.616371 },  // แยกหน้าตึก 6
-    topBridge: { lat: 13.676517, lng: 100.616237 },  // หน้าตึก 8
-    path7: { lat: 13.676250, lng: 100.616700 },      // แยกไปตึก 7
-    path5_12: { lat: 13.675300, lng: 100.616000 },   // แยกไปตึก 5 และโดม
-    path2_3: { lat: 13.675668, lng: 100.616382 },    // ทางเดินไปตึก 2, 3
-    sideRoad: { lat: 13.675720, lng: 100.615714 }   // ทางข้างตึก1
-};
-
-// 1. ตั้งค่าการซูมให้ลึกถึงระดับ 20
-// 2. สลับโหมด
-const map = L.map('map', {
-    maxZoom: 19, 
-    minZoom: 15
-}).setView([13.675929, 100.616100], 18);
-
-// 2. สร้างชั้นข้อมูลแผนที่ 2 รูปแบบ (ปกติ และ ดาวเทียม)
-const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 20,
-    detectRetina: true,
-    attribution: '© OpenStreetMap'
-});
-
-const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 20,
-    detectRetina: true,
-    attribution: '© Esri & Contributors'
-});
-
-// 3. กำหนดให้เปิดมาเจอ "แผนที่ปกติ" เป็นค่าเริ่มต้น
-streetMap.addTo(map);
-
-// 4. 🔥 เพิ่มปุ่มสลับแผนที่ (Layer Control) ไว้มุมขวาบน
-const baseMaps = {
-    "🗺️ แผนที่ปกติ": streetMap,
-    "🛰️ ภาพถ่ายดาวเทียม": satelliteMap
-};
-L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
-
-let routeLine = null;
-let routeDecorator = null; // 🔥 เพิ่มบรรทัดนี้เข้าไปครับ
-const fromSelect = document.getElementById("from");
-const toSelect = document.getElementById("to");
 const bSelect = document.getElementById("buildingSelect");
+const fSelect = document.getElementById("floorSelect");
+const roomListDiv = document.getElementById("roomList");
 
-// 1. สร้างตัวแปรไอคอนแบบวงกลม
-const redCircleIcon = L.divIcon({
-    className: 'custom-div-icon',
-    html: "<div class='red-circle-marker'></div>",
-    iconSize: [14, 14],
-    iconAnchor: [7, 7] // ปรับให้จุดศูนย์กลางตรงกับพิกัด Lat/Lng
-});
+function init() {
+    const grid = document.getElementById("buildingGrid");
+    grid.innerHTML = "";
+    bSelect.innerHTML = '<option value="">-- เลือกอาคาร --</option>';
 
-// 2. ปรับการวนลูปสร้างหมุดให้ใช้ไอคอนใหม่
-for (const id in buildings) {
+    for (const id in buildings) {
+        const b = buildings[id];
+        const opt = document.createElement("option");
+        opt.value = id;
+        opt.textContent = b.name;
+        bSelect.appendChild(opt);
+
+        const card = document.createElement("div");
+        card.className = "building-card";
+        card.onclick = () => selectBuilding(id);
+        card.innerHTML = `
+            <img src="${b.image}" class="card-img" alt="${b.name}">
+            <div class="card-info">
+                <h4>${b.name}</h4>
+                <p>${b.description}</p>
+            </div>
+        `;
+        grid.appendChild(card);
+    }
+
+    // Service Worker Registration for PWA
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
+    }
+}
+
+function selectBuilding(id) {
+    bSelect.value = id;
+    onBuildingChange();
+}
+
+function onBuildingChange() {
+    const id = bSelect.value;
+    if (!id) { resetToHome(); return; }
+
     const b = buildings[id];
+    document.getElementById("bName").textContent = b.name;
+    document.getElementById("bDesc").textContent = b.description;
+    document.getElementById("bImg").src = b.image;
+    document.getElementById("imgWrapper").style.display = "block";
+    document.getElementById("navBtn").style.display = "block";
+    document.getElementById("buildingGrid").style.display = "none";
+    document.getElementById("backBtn").style.display = "flex";
     
-    // เปลี่ยนจาก L.marker แบบเดิม เป็นแบบใส่ icon
-    L.marker([b.lat, b.lng], { icon: redCircleIcon })
-        .addTo(map)
-        .bindPopup(`<b>${b.name}</b>`)
-        .on('click', () => showBuilding(id));
+    document.getElementById("mainContainer").classList.remove("full-width");
+    document.getElementById("roomContainer").style.display = "block";
+
+    fSelect.innerHTML = '<option value="">-- เลือกชั้น --</option>';
+    for (const floor in b.floors) {
+        const opt = document.createElement("option");
+        opt.value = floor;
+        opt.textContent = "ชั้น " + floor;
+        fSelect.appendChild(opt);
+    }
+    roomListDiv.innerHTML = '<p style="text-align:center; color:var(--text-muted)">กรุณาเลือกชั้นเรียน</p>';
+}
+
+function showRooms() {
+    const bId = bSelect.value;
+    const floor = fSelect.value;
+    if (!bId || !floor) return;
+
+    const rooms = buildings[bId].floors[floor];
+    document.getElementById("floorTitle").textContent = `🏫 ชั้น ${floor} - ${buildings[bId].name}`;
+    roomListDiv.innerHTML = "";
+
+    rooms.forEach(room => {
+        const item = document.createElement("div");
+        item.className = "room-item";
+        let icon = "📖";
+        if (room.includes("คอม") || room.includes("สารสนเทศ")) icon = "💻";
+        else if (room.includes("ประชุม")) icon = "🤝";
+        else if (room.includes("ครู")) icon = "👨‍🏫";
+        else if (room.includes("น้ำ")) icon = "🚻";
         
-    const opt = `<option value="${id}">${b.name}</option>`;
-    fromSelect.innerHTML += opt;
-    toSelect.innerHTML += opt;
-    bSelect.innerHTML += opt;
+        item.innerHTML = `<div class="room-icon">${icon}</div> <span>${room}</span>`;
+        roomListDiv.appendChild(item);
+    });
 }
-
-function showBuilding(id, floor = null, room = null) {
-    const b = buildings[id];
-    const modalBody = document.getElementById("modalBody");
-    const overlay = document.getElementById("modalOverlay");
-    
-    const searchHighlight = room ? 
-        `<div style="background:#fff3cd; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid #ffeeba;">
-            🔍 <b>พบห้อง:</b> ${room} <br> 📍 <b>ตำแหน่ง:</b> ชั้น ${floor}
-         </div>` : "";
-
-    modalBody.innerHTML = `
-        <h2>🏢 ${b.name}</h2>
-        ${b.image ? `<img src="${b.image}" alt="${b.name}">` : ""}
-        ${searchHighlight}
-        <div style="text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px;">
-            <p><strong>📍 พิกัด:</strong> ${b.lat}, ${b.lng}</p>
-            <p><strong>🏠 จำนวนชั้น:</strong> ${Object.keys(b.floors).length} ชั้น</p>
-        </div>
-        <div id="floorDetail" class="modal-floor-info"></div>
-        <button class="btn-floor" onclick="toggleFloorInfo()">🔍 ดูข้อมูลชั้นและห้องทั้งหมด</button>
-        <button onclick="closeModal()" style="margin-top: 10px; background: #4dabf7;">ตกลง</button>
-    `;
-    
-    let floorHtml = '<h4>📋 รายการห้องทั้งหมด</h4>';
-    for (const f in b.floors) {
-        floorHtml += `<b>ชั้น ${f}:</b><ul>`;
-        b.floors[f].forEach(r => {
-            const style = (r === room) ? 'style="color:red; font-weight:bold;"' : '';
-            floorHtml += `<li ${style}>🚪 ${r}</li>`;
-        });
-        floorHtml += `</ul>`;
-    }
-    document.getElementById("floorDetail").innerHTML = floorHtml;
-    overlay.classList.add("active");
-    map.flyTo([b.lat, b.lng], 18, { animate: true, duration: 1.5 });
-}
-
-// ฟังก์ชันคำนวณระยะห่างระหว่างจุด 2 จุด (ใช้ Lat/Lng)
-function findRoute() {
-    const startId = document.getElementById("from").value;
-    const endId = document.getElementById("to").value;
-    if (!startId || !endId) return alert("กรุณาเลือกจุดเริ่มต้นและจุดหมาย");
-    // 🔥 เพิ่มบรรทัดนี้ลงไป เพื่อป้องกันคนกดเลือกตึกซ้ำกันครับ
-    if (startId === endId) return alert("คุณกำลังอยู่ที่ตึกเป้าหมายแล้วครับ!");
-    if (routeLine) map.removeLayer(routeLine);
-    if (routeDecorator) map.removeLayer(routeDecorator); 
-
-    const start = buildings[startId];
-    const end = buildings[endId];
-    
-    let pathPoints = [ [start.lat, start.lng] ];
-
-    // 💡 1. เพิ่มตึก 2, 3, 6 ให้เดินตรงไปหาตึก 4 ได้เลย ไม่ต้องอ้อมหน้าตึก 1
-    const directPaths = [
-        "8-9", "9-8", "3-7", "7-3", "4-7", "7-4",
-        "5-12", "12-5", "9-11", "11-9", "8-11", "11-8",
-        "8-10", "10-8", "1-2", "2-1", "2-3", "3-2", "1-4", "4-1",
-        "11-10", "10-11",
-        "2-12", "12-2",   
-        "2-5", "5-2",     
-        "1-12", "12-1",   
-        "1-5", "5-1",     
-        "13-1", "1-13",   
-        "13-4", "4-13", 
-        "6-7", "7-6",     
-        "6-8", "8-6",     
-        "1-6", "6-1",
-        // 🔥 เพิ่มเฉพาะเส้นทางที่ขอ (ไม่กระทบที่อื่น)
-        "2-4", "4-2",
-        "3-4", "4-3",
-        "6-4", "4-6"
-    ];
-
-    const routeKey = `${startId}-${endId}`;
-
-    if (directPaths.includes(routeKey)) {
-        pathPoints.push([end.lat, end.lng]);
-    } 
-    // 💡 2. บังคับให้ ตึก 5 และ โดม(12) ไปตึก 4 ต้อง "เดินทะลุตึก 2"
-    else if (routeKey === "3-5" || routeKey === "3-12" || routeKey === "4-5" || routeKey === "4-12") {
-        pathPoints.push([buildings["2"].lat, buildings["2"].lng]); // แวะทะลุตึก 2
-        pathPoints.push([end.lat, end.lng]); 
-    } 
-    else if (routeKey === "5-3" || routeKey === "12-3" || routeKey === "5-4" || routeKey === "12-4") {
-        pathPoints.push([buildings["2"].lat, buildings["2"].lng]); // แวะทะลุตึก 2
-        pathPoints.push([end.lat, end.lng]); 
-    } 
-    else {
-        // --- 🔒 โค้ดส่วนอื่นๆ คงเดิมเป๊ะ 100% ไม่มีการเปลี่ยนแปลง ---
-        const upperZone = ["6", "7", "8", "9", "10", "11"];
-        const midZone = ["1", "2", "3", "4", "13"]; 
-        const bottomZone = ["5", "12"]; 
-
-        const isBothUpper = upperZone.includes(startId) && upperZone.includes(endId);
-        const isBothBottom = bottomZone.includes(startId) && bottomZone.includes(endId);
-
-        if (isBothUpper || isBothBottom) {
-            if (isBothUpper && (["8", "9", "11"].includes(startId) || ["8", "9", "11"].includes(endId))) {
-                pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
-            }
-            if (isBothBottom && (["5", "12"].includes(startId) || ["5", "12"].includes(endId))) {
-                pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
-            }
-        } else {
-            if (!upperZone.includes(startId) && upperZone.includes(endId)) {
-                if (bottomZone.includes(startId)) {
-                    if (["5", "12"].includes(startId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
-                    pathPoints.push([collegePaths.sideRoad.lat, collegePaths.sideRoad.lng]); 
-                }
-                if (["2", "3"].includes(startId)) pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
-                
-                pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
-                if (["8", "9", "11"].includes(endId)) pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
-            }
-            else if (upperZone.includes(startId) && !upperZone.includes(endId)) {
-                if (["8", "9", "11"].includes(startId)) pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
-                pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
-                pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                
-                if (["2", "3"].includes(endId)) pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
-                if (bottomZone.includes(endId)) {
-                    pathPoints.push([collegePaths.sideRoad.lat, collegePaths.sideRoad.lng]); 
-                    if (["5", "12"].includes(endId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
-                }
-            }
-            else if ((bottomZone.includes(startId) && midZone.includes(endId)) || (midZone.includes(startId) && bottomZone.includes(endId))) {
-                if (bottomZone.includes(startId)) {
-                    if (["5", "12"].includes(startId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
-                    pathPoints.push([collegePaths.sideRoad.lat, collegePaths.sideRoad.lng]);
-                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                    if (["2", "3"].includes(endId)) pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
-                } else {
-                    if (["2", "3"].includes(startId)) pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
-                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                    pathPoints.push([collegePaths.sideRoad.lat, collegePaths.sideRoad.lng]);
-                    if (["5", "12"].includes(endId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
-                }
-            }
-            else if (midZone.includes(startId) && midZone.includes(endId)) {
-                const frontMid = ["1", "4", "13"];
-                const backMid = ["2", "3"];
-                
-                if (frontMid.includes(startId) && backMid.includes(endId)) {
-                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                    pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
-                } else if (backMid.includes(startId) && frontMid.includes(endId)) {
-                    pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
-                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                } else {
-                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                }
-            }
-        }
-        pathPoints.push([end.lat, end.lng]);
-    }
-
-    routeLine = L.polyline(pathPoints, {
-        color: '#4dabf7', weight: 6, opacity: 0.8, dashArray: '10, 15', lineJoin: 'round'
-    }).addTo(map);
-
-    routeDecorator = L.polylineDecorator(routeLine, {
-        patterns: [
-            {
-                offset: '30px',     
-                repeat: '60px',     
-                symbol: L.Symbol.arrowHead({
-                    pixelSize: 15,  
-                    polygon: true, 
-                    pathOptions: { stroke: true, color: '#0d6efd', fillOpacity: 1, weight: 1 } 
-                })
-            }
-        ]
-    }).addTo(map);
-
-    map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
-    closeModal();
-
-    let totalDistance = 0;
-    for (let i = 0; i < pathPoints.length - 1; i++) {
-        totalDistance += map.distance(pathPoints[i], pathPoints[i+1]);
-    }
-    totalDistance = Math.round(totalDistance); 
-
-    let walkTimeMin = Math.ceil(totalDistance / 80); 
-    let timeText = (walkTimeMin <= 1) ? "ไม่ถึง 1 นาที" : `ประมาณ ${walkTimeMin} นาที`;
-
-    document.getElementById("info").innerHTML = `
-        <b>🧭 เส้นทาง:</b> ${start.name} <br> ➜ ${end.name} <br>
-        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ccc; color: #475569; font-size: 13px;">
-            📏 ระยะทาง: <b style="color:#0d6efd;">${totalDistance} เมตร</b> <br>
-            🚶‍♂️ เดินเท้า: <b style="color:#0d6efd;">${timeText}</b>
-        </div>
-    `;
-}
-
-
 
 function handleSearch() {
     const query = document.getElementById("search").value.toLowerCase().trim();
-    const resultContainer = document.getElementById("searchResults");
-    resultContainer.innerHTML = "";
-    if (query === "") return;
+    if (!query) return;
 
-    Object.keys(buildings).forEach(id => {
-        const b = buildings[id];
-        const roomMatch = Object.values(b.floors).flat().some(r => r.toLowerCase().includes(query));
-        if (b.name.toLowerCase().includes(query) || roomMatch) {
-            const div = document.createElement("div");
-            div.className = "search-item";
-            div.innerHTML = `🏢 ${b.name} ${roomMatch ? '<small>(พบห้อง)</small>' : ''}`;
-            div.onclick = () => {
-                showBuilding(id);
-                resultContainer.innerHTML = "";
-                document.getElementById("search").value = b.name;
-            };
-            resultContainer.appendChild(div);
-        }
-    });
-}
-
-function performSearch() {
-    const query = document.getElementById("search").value.toLowerCase().trim();
-    if (query === "") return;
     for (const id in buildings) {
-        if (buildings[id].name.toLowerCase().includes(query)) return showBuilding(id);
         for (const floor in buildings[id].floors) {
-            const room = buildings[id].floors[floor].find(r => r.toLowerCase().includes(query));
-            if (room) return showBuilding(id, floor, room);
+            const match = buildings[id].floors[floor].find(r => r.toLowerCase().includes(query));
+            if (match) {
+                selectBuilding(id);
+                fSelect.value = floor;
+                showRooms();
+                setTimeout(() => {
+                    const items = roomListDiv.querySelectorAll(".room-item");
+                    items.forEach(el => {
+                        if (el.textContent.toLowerCase().includes(query)) el.classList.add("highlight-item");
+                    });
+                }, 100);
+                return;
+            }
         }
     }
 }
 
-function toggleFloorInfo() {
-    const detail = document.getElementById("floorDetail");
-    const isHidden = detail.style.display === "none" || detail.style.display === "";
-    detail.style.display = isHidden ? "block" : "none";
-    document.querySelector(".btn-floor").innerText = isHidden ? "🔼 ซ่อนข้อมูลชั้น" : "🔍 ดูข้อมูลชั้นและห้อง";
+function filterByType(type) {
+    document.getElementById("search").value = type;
+    handleSearch();
 }
 
-
-
-function closeModal() { document.getElementById("modalOverlay").classList.remove("active"); }
-let userMarker = null; // ตัวแปรเก็บหมุดผู้ใช้ (มีอยู่แล้วในโค้ดเดิม)
-
-// 💡 1. ฟังก์ชันขออนุญาตใช้งาน GPS และ เข็มทิศ
-function locateMe() {
-    // สำหรับ iPhone (iOS 13+) ต้องมีการขออนุญาต (Request Permission) ก่อน
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission()
-            .then(permissionState => {
-                if (permissionState === 'granted') {
-                    startTracking();
-                } else {
-                    alert("⚠️ ต้องอนุญาตการเข้าถึงเข็มทิศเพื่อใช้ฟีเจอร์นี้ครับ");
-                    startTracking(); // ถ้าไม่ให้เข็มทิศ ก็ยังติดตาม GPS ได้ปกติ
-                }
-            })
-            .catch(console.error);
-    } else {
-        // สำหรับ Android หรืออุปกรณ์อื่นๆ ข้ามไปเปิด GPS ได้เลย
-        startTracking();
+function getNavigation() {
+    const id = bSelect.value;
+    const b = buildings[id];
+    if (b && b.lat && b.lng) {
+        const url = `https://www.google.com/maps/search/?api=1&query=${b.lat},${b.lng}`;
+        window.open(url, '_blank');
     }
 }
 
-// 💡 2. ฟังก์ชันเริ่มติดตามตำแหน่งและหมุนเข็มทิศ
-function startTracking() {
-    // เปิดระบบ GPS ค้นหาพิกัด
-    map.locate({
-        setView: true, 
-        maxZoom: 18, 
-        watch: true, 
-        enableHighAccuracy: true 
-    });
-
-    // เมื่อหาพิกัดเจอ
-    map.on('locationfound', (e) => {
-        if (!userMarker) {
-            // 🔥 สร้างหมุดแบบพิเศษ: มีลูกศรชี้ทิศทาง (สามเหลี่ยมด้านบน)
-            const compassIcon = L.divIcon({
-                className: 'custom-user-marker',
-                html: `
-                    <div id="user-compass" style="
-                        width: 16px; height: 16px; 
-                        background: #20c997; 
-                        border: 2px solid white; 
-                        border-radius: 50%; 
-                        position: relative; 
-                        box-shadow: 0 0 10px rgba(32,201,151,0.6); 
-                        transition: transform 0.1s ease-out; 
-                        transform: rotate(0deg);
-                    ">
-                        <div style="
-                            position: absolute; top: -10px; left: 1px; 
-                            width: 0; height: 0; 
-                            border-left: 5px solid transparent; 
-                            border-right: 5px solid transparent; 
-                            border-bottom: 12px solid #20c997;
-                        "></div>
-                    </div>
-                `,
-                iconSize: [16, 16],
-                iconAnchor: [8, 8] // จุดศูนย์กลางของหมุด
-            });
-            userMarker = L.marker(e.latlng, { icon: compassIcon }).addTo(map).bindPopup("คุณอยู่ตรงนี้");
-        } else {
-            // ถ้ามีหมุดอยู่แล้ว ให้อัปเดตแค่พิกัดตอนเดิน
-            userMarker.setLatLng(e.latlng); 
-        }
-        document.getElementById("info").innerHTML = "📍 กำลังติดตามตำแหน่งและทิศทางของคุณ...";
-    });
-
-    map.on('locationerror', (e) => {
-        alert("ไม่สามารถเข้าถึงตำแหน่งของคุณได้: " + e.message);
-    });
-
-    // 🔥 เปิดระบบเซ็นเซอร์ตรวจจับการหมุนของโทรศัพท์
-    window.addEventListener('deviceorientation', (e) => {
-        // ดึงองศาเข็มทิศ (รองรับทั้ง iOS และ Android)
-        let heading = e.webkitCompassHeading || Math.abs(e.alpha - 360);
-        
-        // สั่งหมุน CSS ของหมุดตามองศาที่หันหน้าไป
-        const compassEl = document.getElementById("user-compass");
-        if (compassEl && heading != null) {
-            compassEl.style.transform = `rotate(${heading}deg)`;
-        }
-    }, true);
-}
-
-// ฟังก์ชันสำหรับรีเซ็ตแผนที่และล้างค่าทุกอย่าง
-function resetMap() {
-    // 1. ลบเส้นนำทางและลูกศรออก
-    if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
-    if (routeDecorator) { map.removeLayer(routeDecorator); routeDecorator = null; }
-    
-    // 2. ลบหมุดตำแหน่งตัวเอง และ "ปิดระบบติดตาม GPS"
-    if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
-    map.stopLocate(); 
-
-    // 3. ล้างค่าช่องค้นหาและรายการผลลัพธ์
+function resetToHome() {
+    document.getElementById("mainContainer").classList.add("full-width");
+    document.getElementById("roomContainer").style.display = "none";
+    document.getElementById("buildingGrid").style.display = "grid";
+    document.getElementById("imgWrapper").style.display = "none";
+    document.getElementById("navBtn").style.display = "none";
+    document.getElementById("backBtn").style.display = "none";
+    document.getElementById("bName").textContent = "🏛️ รายชื่ออาคารทั้งหมด";
+    document.getElementById("bDesc").textContent = "กรุณาเลือกอาคารเพื่อดูข้อมูล";
+    bSelect.value = "";
+    fSelect.innerHTML = '<option value="">-- เลือกชั้น --</option>';
     document.getElementById("search").value = "";
-    document.getElementById("searchResults").innerHTML = "";
-
-    // 4. รีเซ็ต Dropdown กลับเป็นค่าเริ่มต้น
-    document.getElementById("from").value = "";
-    document.getElementById("to").value = "";
-    document.getElementById("buildingSelect").value = "";
-
-    // 5. คืนค่ากล่องข้อความ
-    document.getElementById("info").innerHTML = "คลิกหมุดบนแผนที่เพื่อดูข้อมูล";
-
-    // 6. ดึงหน้าจอแผนที่กลับมาจุดเริ่มต้น (หน้าตึก 1)
-    map.setView([13.675929, 100.616100], 17);
 }
 
+function toggleNight() { document.body.classList.toggle("night"); }
 
-// ฟังก์ชันสำหรับแสดงคู่มือการใช้งาน
-function showGuide() {
-    const modalBody = document.getElementById("modalBody");
-    const overlay = document.getElementById("modalOverlay");
-    
-    // กำหนดเนื้อหาในหน้าต่างคู่มือ
-    modalBody.innerHTML = `
-        <div style="text-align:center;">
-            <h2 style="color:#4dabf7; margin-bottom:20px;">📖 คู่มือการใช้งาน BNCC MAP</h2>
-            <img src="https://cdn-icons-png.flaticon.com/512/2232/2232688.png" style="width:80px; margin-bottom:15px;" alt="Guide Icon">
-        </div>
-        <div style="text-align:left; line-height:1.8; background:#f8fafc; padding:15px; border-radius:12px;">
-            <p><b>📍 วิธีใช้งานเบื้องต้น:</b></p>
-            <ul style="padding-left:20px; margin:0;">
-                <li><b>ค้นหา:</b> พิมพ์ชื่อห้องหรือเลขห้องในช่องค้นหา</li>
-                <li><b>นำทาง:</b> เลือกตึกต้นทาง-ปลายทาง แล้วกดปุ่มสีฟ้า</li>
-                <li><b>ข้อมูล:</b> คลิกที่วงกลมสีแดงในแมพเพื่อดูรายละเอียดตึกและชั้น</li>
-                <li><b>พิกัด:</b> กดปุ่มสีเขียวเพื่อระบุตำแหน่งที่คุณยืนอยู่</li>
-                <li><b>รีเช็ท:</b> กดปุ่มสีแดงล้างค่าเพื่อล้างค่าทั้งหมดเหมือนเริ่มต้นใหม่</li>
-                <li><b>หมายเหตุ:</b>มุมขวาบนสามารถเปลี่ยนมุมมองดาวเทียมได้</li>
-            </ul>
-        </div>
-        <button onclick="closeModal()" style="margin-top:20px; width:100%; padding:12px; background:#4dabf7; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer; box-shadow:0 4px 6px rgba(77,171,247,0.3);">รับทราบและเริ่มใช้งาน</button>
-    `;
-    
-    overlay.classList.add("active"); // แสดง Modal
-}
-
-// สั่งให้ฟังก์ชันทำงานทันทีที่โหลดหน้าเว็บเสร็จ (เด้งทุกครั้ง)
-window.addEventListener('load', showGuide);
+window.onload = init;
 </script>
+
 </body>
 </html>

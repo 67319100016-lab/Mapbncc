@@ -1,0 +1,21 @@
+{
+  "name": "ระบบสืบค้นข้อมูลอาคาร พณิชยการบางนา",
+  "short_name": "พณิชยการบางนา",
+  "description": "ระบบสืบค้นข้อมูลอาคารและห้องเรียนออนไลน์ วิทยาลัยพณิชยการบางนา",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fbff",
+  "theme_color": "#0077b6",
+  "icons": [
+    {
+      "src": "images/b1.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "images/b1.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
