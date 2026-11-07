@@ -15,6 +15,39 @@
 :root { --bg:#f7f9fc; --panel:#ffffff; --primary:#4dabf7; --text:#212529; }
 *{box-sizing:border-box}
 body{ margin:0; font-family:system-ui,-apple-system; background:var(--bg); display:flex; height:100vh; overflow: hidden; }
+
+/* Landing Page Overlay */
+#landingPage {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg);
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+}
+#landingPage h1 { color: var(--primary); margin-bottom: 30px; font-size: 2.2rem; }
+.mode-options { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 500px; width: 100%; }
+.mode-card {
+    background: #fff;
+    padding: 30px 20px;
+    border-radius: 20px;
+    flex: 1;
+    min-width: 180px;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+.mode-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 15px 30px rgba(77,171,247,0.2); }
+.mode-card .icon { font-size: 45px; margin-bottom: 15px; }
+.mode-card .title { font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; color: var(--text); }
+.mode-card .desc { font-size: 0.85rem; color: #666; }
+
+/* Main App Layout */
 #sidebar{ width:320px; background:var(--panel); box-shadow:2px 0 12px rgba(0,0,0,.1); padding:16px; overflow-y: auto; z-index: 1000; }
 #map-wrap{ flex:1; position: relative; }
 #map { width: 100%; height: 100%; }
@@ -22,38 +55,25 @@ input,select,button{ width:100%; padding:10px; margin-bottom:10px; border-radius
 button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; border: none; cursor: pointer; font-weight: bold; }
 #info{ margin-top:10px; padding:15px; background:#f1f5f9; border-radius:8px; border-left: 4px solid #4dabf7; font-size: 14px; }
 
+/* Header Switcher inside Sidebar */
+.mode-switch-btn {
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    width: auto;
+    display: inline-block;
+}
+
 @media (max-width: 600px) {
-    body {
-        display: flex;
-        flex-direction: row;
-    }
-
-    #sidebar { 
-        width: 40%;
-        min-width: 140px;
-        padding: 10px; 
-        font-size: 13px;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    }
-
-    #map-wrap { 
-        width: 60%; 
-        flex: none; 
-    }
-
+    body { display: flex; flex-direction: row; }
+    #sidebar { width: 40%; min-width: 140px; padding: 10px; font-size: 13px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+    #map-wrap { width: 60%; flex: none; }
     #sidebar h2 { font-size: 1.1rem; margin-bottom: 8px; }
-    
-    input, select, button { 
-        padding: 8px; 
-        font-size: 12px; 
-        margin-bottom: 6px; 
-    }
-
-    .search-results {
-        width: calc(100% - 20px);
-        font-size: 12px;
-    }
-
+    input, select, button { padding: 8px; font-size: 12px; margin-bottom: 6px; }
+    .search-results { width: calc(100% - 20px); font-size: 12px; }
     #info { font-size: 12px; padding: 8px; }
 }
 
@@ -128,26 +148,56 @@ button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; borde
 </head>
 
 <body>
+
+<!-- Landing Screen (Choice selection) -->
+<div id="landingPage">
+    <h1>🏫 BNCC MAP</h1>
+    <div class="mode-options">
+        <div class="mode-card" onclick="selectMode('nav')">
+            <div class="icon">🧭</div>
+            <div class="title">ดูแผนที่และนำทาง</div>
+            <div class="desc">ดูแผนที่วิทยาลัย, ค้นหาเส้นทาง, พิกัด GPS เข็มทิศ</div>
+        </div>
+        <div class="mode-card" onclick="selectMode('info')">
+            <div class="icon">🏢</div>
+            <div class="title">ค้นหาข้อมูลอาคาร</div>
+            <div class="desc">ดูรายชื่อตึก, แปลนห้องเรียนแต่ละชั้น, รูปถ่ายอาคาร</div>
+        </div>
+    </div>
+</div>
+
+<!-- Main App UI -->
 <div id="sidebar">
-  <h2 style="color: #4dabf7; text-shadow: 1px 1px 3px rgba(77,171,247,0.3);"> BNCC Map</h2>
-  <div style="position: relative;">
-    <input id="search" placeholder="🔍 ค้นหาชื่อหรือเลขห้อง..." oninput="handleSearch()" onkeydown="if(event.key === 'Enter') performSearch()">
-    <div id="searchResults" class="search-results"></div>
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h2 style="color: #4dabf7; text-shadow: 1px 1px 3px rgba(77,171,247,0.3); margin: 0 0 5px 0;">BNCC Map</h2>
+    <button class="mode-switch-btn" onclick="openLanding()">🔄 เปลี่ยนโหมด</button>
   </div>
-  <h4>🧭 ระบบนำทาง</h4>
-  <select id="from"><option value="">เลือกจุดเริ่มต้น</option></select>
-  <select id="to"><option value="">เลือกจุดหมาย</option></select>
-  <button onclick="findRoute()">🧭 แนะนำเส้นทาง</button>
-  <button onclick="locateMe()" style="background: #20c997;">📍 ตำแหน่งของฉัน</button>
-  <button onclick="resetMap()" style="background: #f57979; margin-top: 5px; padding: 3px 10px; font-size: 10px; border-radius: 6px; width: fit-content; margin-left: auto; margin-right: auto; display: block;">🔄 ล้างค่า / เริ่มใหม่</button>
-  <hr>
-  <h3>📚 ข้อมูลอาคาร</h3>
-  <select id="buildingSelect" onchange="if(this.value) showBuilding(this.value)">
-    <option value="">เลือกอาคารเพื่อดูข้อมูล</option>
-  </select>
+
+  <!-- Section 1: Navigation Mode -->
+  <div id="sectionNav">
+    <div style="position: relative;">
+      <input id="search" placeholder="🔍 ค้นหาชื่อหรือเลขห้อง..." oninput="handleSearch()" onkeydown="if(event.key === 'Enter') performSearch()">
+      <div id="searchResults" class="search-results"></div>
+    </div>
+    <h4>🧭 ระบบนำทาง</h4>
+    <select id="from"><option value="">เลือกจุดเริ่มต้น</option></select>
+    <select id="to"><option value="">เลือกจุดหมาย</option></select>
+    <button onclick="findRoute()">🧭 แนะนำเส้นทาง</button>
+    <button onclick="locateMe()" style="background: #20c997;">📍 ตำแหน่งของฉัน</button>
+    <button onclick="resetMap()" style="background: #f57979; margin-top: 5px; padding: 3px 10px; font-size: 10px; border-radius: 6px; width: fit-content; margin-left: auto; margin-right: auto; display: block;">🔄 ล้างค่า / เริ่มใหม่</button>
+  </div>
+
+  <!-- Section 2: Building Info Mode -->
+  <div id="sectionInfo">
+    <h3>📚 ข้อมูลอาคาร</h3>
+    <select id="buildingSelect" onchange="if(this.value) showBuilding(this.value)">
+      <option value="">เลือกอาคารเพื่อดูข้อมูล</option>
+    </select>
+  </div>
 
   <div id="info">คลิกหมุดบนแผนที่เพื่อดูข้อมูล</div>
 </div>
+
 <div id="map-wrap"><div id="map"></div></div>
 
 <div id="modalOverlay" class="modal-overlay" onclick="closeModal()">
@@ -377,6 +427,25 @@ for (const id in buildings) {
     fromSelect.innerHTML += opt;
     toSelect.innerHTML += opt;
     bSelect.innerHTML += opt;
+}
+
+// Function to select Mode (Nav vs Info)
+function selectMode(mode) {
+    document.getElementById("landingPage").style.display = "none";
+    const secNav = document.getElementById("sectionNav");
+    const secInfo = document.getElementById("sectionInfo");
+    
+    if (mode === 'nav') {
+        secNav.style.display = "block";
+        secInfo.style.display = "none";
+    } else {
+        secNav.style.display = "none";
+        secInfo.style.display = "block";
+    }
+}
+
+function openLanding() {
+    document.getElementById("landingPage").style.display = "flex";
 }
 
 function showBuilding(id, floor = null, room = null) {
@@ -706,38 +775,6 @@ function resetMap() {
 
     map.setView([13.675929, 100.616100], 17);
 }
-
-function showGuide() {
-    const modalBody = document.getElementById("modalBody");
-    const overlay = document.getElementById("modalOverlay");
-    
-    modalBody.innerHTML = `
-        <div style="text-align:center;">
-            <h2 style="color:#4dabf7; margin-bottom:20px;">📖 คู่มือการใช้งาน BNCC MAP</h2>
-            <img src="https://cdn-icons-png.flaticon.com/512/2232/2232688.png" style="width:80px; margin-bottom:15px;" alt="Guide Icon">
-        </div>
-        <div style="text-align:left; line-height:1.8; background:#f8fafc; padding:15px; border-radius:12px;">
-            <p><b>📍 วิธีใช้งานเบื้องต้น:</b></p>
-            <ul style="padding-left:20px; margin:0;">
-                <li><b>ค้นหา:</b> พิมพ์ชื่อห้องหรือเลขห้องในช่องค้นหา</li>
-                <li><b>นำทาง:</b> เลือกตึกต้นทาง-ปลายทาง แล้วกดปุ่มสีฟ้า</li>
-                <li><b>ข้อมูล:</b> คลิกที่วงกลมสีแดงในแมพเพื่อดูรายละเอียดตึกและชั้น</li>
-                <li><b>พิกัด:</b> กดปุ่มสีเขียวเพื่อระบุตำแหน่งที่คุณยืนอยู่</li>
-                <li><b>รีเช็ท:</b> กดปุ่มสีแดงล้างค่าเพื่อล้างค่าทั้งหมดเหมือนเริ่มต้นใหม่</li>
-            </ul>
-        </div>
-        <button onclick="closeModal()" style="margin-top:20px; width:100%; padding:12px; background:#4dabf7; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer; box-shadow:0 4px 6px rgba(77,171,247,0.3);">รับทราบและเริ่มใช้งาน</button>
-    `;
-    
-    overlay.classList.add("active");
-}
-
-window.addEventListener('load', () => {
-    if (!localStorage.getItem('bnccGuideShown')) {
-        showGuide();
-        localStorage.setItem('bnccGuideShown', 'true');
-    }
-});
 </script>
 </body>
 </html>
