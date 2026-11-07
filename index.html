@@ -1,585 +1,690 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Building Information System - Panichayakan Bangna</title>
-    
-    <!-- PWA & Mobile Settings -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0077b6">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="images/b1.jpg">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>แผนที่พณิชยการบางนา</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4dabf7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="images/icon-192.png">
 
-    <style>
-        :root {
-            --primary-blue: #0077b6;
-            --secondary-blue: #00b4d8;
-            --light-blue: #caf0f8;
-            --bg-body: #f8fbff;
-            --white: #ffffff;
-            --text-main: #2c3e50;
-            --text-muted: #546e7a;
-            --border-color: #e1e8ed;
-        }
+<style>
+:root{
+  --bg:#f7f9fc;
+  --panel:#ffffff;
+  --primary:#4dabf7;
+  --road:#4e4e4e;
+  --learn:#b7e4c7;
+  --important:#90dbf4;
+  --sport:#74c69d;
+  --text:#212529;
+}
 
-        body.night {
-            --bg-body: #0b1120;
-            --white: #1e293b;
-            --primary-blue: #38bdf8;
-            --secondary-blue: #0ea5e9;
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-        }
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  min-height:100vh;
+}
 
-        * { box-sizing: border-box; }
+/* Sidebar */
+#sidebar{
+  width:320px;
+  background:var(--panel);
+  box-shadow:2px 0 12px rgba(0,0,0,.1);
+  padding:16px;
+  overflow-y:auto;
+  z-index: 10;
+}
+#sidebar h2{margin-top:0; font-size: 20px;}
+#sidebar h4{margin: 10px 0 4px 0; font-size: 14px;}
+input,select,button{
+  width:100%;
+  padding:8px 10px;
+  margin-bottom:8px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size: 14px;
+}
+button{
+  background: linear-gradient(135deg,#6dbdff,#6de2ff);
+  box-shadow: 0 4px 10px rgba(0,0,0,.15);
+  border:none;
+  cursor:pointer;
+  font-weight: bold;
+}
+button:hover{opacity:.9}
+#info{
+  margin-top:8px;
+  padding:10px;
+  background:#f1f5f9;
+  border-radius:8px;
+  font-size:14px;
+}
 
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Sarabun', system-ui, -apple-system, sans-serif;
-            background: var(--bg-body);
-            color: var(--text-main);
-            line-height: 1.6;
-            transition: background 0.3s;
-        }
+/* Map Wrap */
+#map-wrap{
+  flex:1; 
+  overflow:hidden;
+  position: relative;
+}
+svg{
+  width: 100%;
+  height: 100%;
+  background:#eef2f7;
+  cursor:grab;
+}
+.road{fill:var(--road)}
+.learn{fill:var(--learn)}
+.important{fill:var(--important)}
+.sport{fill:var(--sport)}
+.highlight{stroke:#ff595e; stroke-width:3}
 
-        header {
-            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
-            padding: 2.5rem 1rem;
-            color: white;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
+/* ชื่ออาคาร */
+.label{
+  font-size:15px;
+  text-anchor:middle;
+  pointer-events:none;
+  fill:#1b4332;
+  font-weight:700;
+  text-shadow:0 1px 3px rgba(255,255,255,.8);
+}
 
-        header h1 { margin: 0; font-size: 1.8rem; }
-        header p { margin: 0.5rem 0 0; opacity: 0.9; font-weight: 300; }
+/* Route Line */
+#route{
+  stroke:#00f2ff;
+  stroke-width:5;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-dasharray:10 15;
+  animation: dash 0.5s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(0, 242, 255, 0.8));
+  transition: d 0.5s ease-in-out;
+}
 
-        .search-area {
-            background: var(--white);
-            margin: -25px auto 10px;
-            width: 90%;
-            max-width: 1100px;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            z-index: 10;
-            position: relative;
-        }
+@keyframes dash{
+  to{stroke-dashoffset:-25}
+}
 
-        .quick-filters {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 8px;
-            margin: 0 auto 20px;
-            width: 90%;
-            max-width: 1100px;
-        }
+/* Building Hover & Animation */
+.building{
+  stroke:#2f3e46;
+  stroke-width:1.2;
+  rx:10; ry:10;
+  cursor:pointer;
+  transition:.2s;
+  filter: drop-shadow(2px 3px 3px rgba(0,0,0,.15));
+}
+.building:hover{
+  transform:translateY(-2px);
+  filter: drop-shadow(0 0 15px rgb(255, 0, 0));
+}
+.building.selected{
+  stroke:#f3615c;
+  stroke-width:4;
+  filter: drop-shadow(0 0 12px #ee6868) drop-shadow(0 0 25px rgba(255, 104, 104, 0.8));
+  animation: selectPulse .8s ease;
+}
+.building.dim{
+  opacity:0.3;
+}
 
-        .quick-btn {
-            cursor: pointer;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            padding: 6px 16px;
-            background: var(--white);
-            color: var(--text-main);
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
+@keyframes selectPulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.08)}
+  100%{transform:scale(1)}
+}
 
-        .quick-btn:hover {
-            background: var(--light-blue);
-            color: var(--primary-blue);
-            border-color: var(--secondary-blue);
-        }
+.ripple{
+  fill:none;
+  stroke:#f53100;
+  stroke-width:3;
+  opacity:0.8;
+  pointer-events:none;
+  animation:ripple .8s ease-out forwards;
+}
 
-        input, select {
-            padding: 12px 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            background: var(--bg-body);
-            color: var(--text-main);
-            font-size: 1rem;
-        }
+@keyframes ripple{
+  from{r:0; opacity:1}
+  to{r:45; opacity:0}
+}
 
-        main {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            padding: 0 5% 40px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
+/* Night Mode */
+body.night{
+  --bg:#0f172a;
+  --panel:#020617;
+  --road:#475569;
+  --text:#e5e7eb;
+}
+body.night #info{
+  background: #1e293b;
+  color: #e5e7eb;
+}
 
-        main.full-width { grid-template-columns: 1fr; }
+/* Responsive Support for Mobile */
+@media (max-width: 768px) {
+  body {
+    flex-direction: column;
+  }
+  #sidebar {
+    width: 100%;
+    order: 2;
+    max-height: 50vh;
+  }
+  #map-wrap {
+    height: 50vh;
+    order: 1;
+  }
+}
 
-        .card {
-            background: var(--white);
-            border-radius: 20px;
-            padding: 25px;
-            border: 1px solid var(--border-color);
-            height: fit-content;
-        }
-
-        .building-detail h2 { color: var(--primary-blue); margin-top: 0; }
-        
-        .building-img-wrapper {
-            width: 100%;
-            height: 300px;
-            overflow: hidden;
-            border-radius: 15px;
-            margin: 20px 0;
-            display: none;
-        }
-
-        .building-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
-
-        .nav-btn {
-            display: none;
-            width: 100%;
-            margin-top: 15px;
-            padding: 12px;
-            border-radius: 12px;
-            border: none;
-            background: #25d366;
-            color: white;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);
-            transition: background 0.2s;
-        }
-
-        .nav-btn:hover {
-            background: #1eb857;
-        }
-
-        /* Building Grid */
-        .building-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .building-card {
-            background: var(--white);
-            border-radius: 15px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .building-card:hover { transform: translateY(-5px); border-color: var(--secondary-blue); }
-        .card-img { width: 100%; height: 150px; object-fit: cover; }
-        .card-info { padding: 15px; }
-
-        /* Room List */
-        .room-item {
-            padding: 15px;
-            background: var(--bg-body);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        .room-icon {
-            width: 40px; height: 40px;
-            background: var(--white);
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem;
-            border: 1px solid var(--light-blue);
-        }
-
-        .highlight-item { background: var(--light-blue) !important; border-color: var(--primary-blue) !important; }
-
-        .back-btn {
-            display: none;
-            align-items: center;
-            gap: 8px;
-            background: var(--light-blue);
-            color: var(--primary-blue);
-            border: none;
-            padding: 10px 18px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-
-        .night-mode-toggle {
-            position: fixed; bottom: 20px; right: 20px;
-            background: var(--primary-blue); color: white;
-            border: none; padding: 15px; border-radius: 50%;
-            cursor: pointer; z-index: 1000;
-        }
-
-        @media (max-width: 900px) {
-            main { grid-template-columns: 1fr; }
-        }
-    </style>
+/* Help Modal Overlay */
+.help-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+}
+.help-popup {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.help-popup button {
+  margin-top: 15px;
+  padding: 12px 24px;
+  border: none;
+  background: #0d6efd;
+  color: white;
+  font-size: 18px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+</style>
 </head>
+
 <body>
 
-<header>
-    <h1>🏢 พณิชยการบางนา</h1>
-    <p>ระบบสืบค้นข้อมูลอาคารและห้องเรียนออนไลน์</p>
-</header>
+<div id="sidebar">
+  <h2>แผนที่พณิชยการบางนา</h2>
 
-<div class="search-area">
-    <input id="search" type="text" placeholder="🔍 ค้นหาชื่อห้องหรือเลขห้อง..." oninput="handleSearch()">
-    <select id="buildingSelect" onchange="onBuildingChange()">
-        <option value="">-- เลือกอาคาร --</option>
-    </select>
-    <select id="floorSelect" onchange="showRooms()">
-        <option value="">-- เลือกชั้น --</option>
-    </select>
+  <input id="search" placeholder="ค้นหาห้อง เช่น (9601 ตึก9)">
+  <h4>ระบุอาคารที่อยู่ปัจจุบัน</h4>
+  <select id="from"></select>
+  <h4>ระบุอาคารที่จะไป</h4>
+  <select id="to"></select>
+  <button onclick="findRoute()">🧭 แนะนำเส้นทาง</button>
+  <button onclick="locateMe()">📍 ตำแหน่งของฉัน</button>
+  <hr>
+  <button onclick="toggleNight()">🌙 / 🌞 โหมดกลางคืน</button>
+
+  <h3>📚 ข้อมูลอาคาร</h3>
+  <select id="buildingSelect" onchange="updateFloors()">
+    <option value="">เลือกอาคาร</option>
+  </select>
+
+  <select id="floorSelect" onchange="showRooms()">
+    <option value="">เลือกชั้น</option>
+  </select>
+
+  <div id="roomList"></div>
+  <div class="content">
+    <div id="info">คลิกอาคารบนแผนที่</div>
+  </div>
 </div>
 
-<div class="quick-filters">
-    <button class="quick-btn" onclick="filterByType('ห้องพักครู')">👨‍🏫 ห้องพักครู</button>
-    <button class="quick-btn" onclick="filterByType('ประชุม')">🤝 ห้องประชุม</button>
-    <button class="quick-btn" onclick="filterByType('ห้องน้ำ')">🚻 ห้องน้ำ</button>
-    <button class="quick-btn" onclick="filterByType('คอมพิวเตอร์')">💻 ห้องคอมฯ</button>
+<div id="map-wrap">
+  <!-- คู่มือ -->
+  <div id="helpOverlay" class="help-overlay">
+    <div class="help-popup">
+      <h2>📘 ยินดีต้อนรับ</h2>
+      <p>วิธีใช้งานแผนที่วิทยาลัยพณิชยการบางนา</p>
+      <ul style="text-align:left;">
+        <li>🔎 ค้นหาชื่ออาคาร / ห้อง</li>
+        <li>📍 กดปุ่ม GPS เพื่อดูตำแหน่งปัจจุบัน</li>
+        <li>🧭 ระบบนำทางจะแสดงเส้นทางและขั้นตอนเดิน</li>
+        <li>📱 ซูมเข้าออกด้วยนิ้ว หรือ Scrolling</li>
+        <li>📚 ดูข้อมูลห้องเรียนภายในแต่ละชั้น</li>
+      </ul>
+      <button onclick="closeHelp()">เริ่มใช้งาน</button>
+    </div>
+  </div>
+
+  <svg id="map" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <linearGradient id="grassGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#dff2df"/>
+        <stop offset="100%" stop-color="#cbe8cb"/>
+      </linearGradient>
+      <g id="tree">
+        <circle cx="150" cy="150" r="18" fill="#2d6a4f"/>
+        <rect x="145" y="165" width="10" height="15" fill="#6c584c"/>
+      </g>
+      <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#00f2ff" />
+      </marker>
+    </defs>
+
+    <rect x="0" y="0" width="100%" height="100%" fill="url(#grassGrad)" rx="30"/>
+
+    <!-- ถนน -->
+    <g class="road">
+      <rect x="120" y="360" width="360" height="30" rx="10" fill="#b0b7bd"/>
+      <line x1="140" y1="375" x2="430" y2="375" stroke="#fff" stroke-width="3" stroke-dasharray="12,12"/>
+    </g>
+
+    <g class="road">
+      <rect x="0" y="550" width="450" height="40" rx="10" fill="#b0b7bd"/>
+      <line x1="0" y1="570" x2="430" y2="570" stroke="#fff" stroke-width="3" stroke-dasharray="12,12"/>
+    </g>
+
+    <g class="road">
+      <rect x="440" y="60" width="40" height="800" rx="10" fill="#b0b7bd"/>
+      <line x1="460" y1="60" x2="460" y2="800" stroke="#ffffff" stroke-width="4" stroke-dasharray="12,12"/>
+    </g>
+
+    <!-- ต้นไม้ -->
+    <use href="#tree" transform="translate(230 260)"/>
+    <use href="#tree" transform="translate(190 300)"/>
+    <use href="#tree" transform="translate(240 320)"/>
+    <use href="#tree" transform="translate(140 290)"/>
+    <use href="#tree" transform="translate(110 260)"/>
+    <use href="#tree" transform="translate(70  290)"/>
+    <use href="#tree" transform="translate(30  280)"/>
+    <use href="#tree" transform="translate(120 330)"/>
+    <use href="#tree" transform="translate(50  340)"/>
+    <use href="#tree" transform="translate(650  340)"/>
+    <use href="#tree" transform="translate(670  390)"/>
+    <use href="#tree" transform="translate(700  350)"/>
+    <use href="#tree" transform="translate(600  40)"/>
+    <use href="#tree" transform="translate(620  80)"/>
+    <use href="#tree" transform="translate(550  50)"/> 
+
+    <!-- อาคาร -->
+    <rect id="b4" x="560" y="290" width="100" height="80" class="building important"/>
+    <rect id="b1" x="480" y="300" width="60" height="220" class="building learn"/>
+    <rect id="b2" x="545" y="430" width="130" height="90" class="building learn"/>
+    <rect id="b3" x="680" y="300" width="60" height="220" class="building learn"/>
+    <rect id="b5" x="540" y="600" width="180" height="90" class="building important"/>
+    <rect id="b6" x="480" y="160" width="70" height="130" class="building learn"/>
+    <rect id="b7" x="550" y="140" width="110" height="80" class="building learn"/>
+    <rect id="b8" x="300" y="290" width="130" height="70" class="building important"/>
+    <rect id="b9" x="140" y="290" width="130" height="70" class="building learn"/>
+    <circle id="b10" cx="370" cy="220" r="40" class="building important"/>
+
+    <g id="b11" class="building sport">
+      <rect x="145" y="220" width="120" height="60" rx="18" ry="18" fill="#5fbf72"/>
+      <rect x="155" y="230" width="100" height="40" rx="12" ry="12" fill="none" stroke="#ffffff" stroke-width="3"/>
+      <line x1="205" y1="230" x2="205" y2="270" stroke="#ffffff" stroke-width="2"/>
+      <circle cx="205" cy="250" r="10" fill="none" stroke="#ffffff" stroke-width="2"/>
+      <rect x="155" y="240" width="6" height="20" fill="none" stroke="#ffffff" stroke-width="2"/>
+      <rect x="249" y="240" width="6" height="20" fill="none" stroke="#ffffff" stroke-width="2"/>
+    </g>
+
+    <rect id="b12" x="560" y="530" width="100" height="60" class="building sport"/>
+
+    <!-- ชื่ออาคาร -->
+    <text class="label" x="610" y="330">โรงอาหารเก่า</text> 
+    <text class="label" x="510" y="400">ตึก 1</text>
+    <text class="label" x="610" y="480">ตึก 2</text>
+    <text class="label" x="710" y="400">ตึก 3</text>
+    <text class="label" x="630" y="650">ตึก 5 (ยิม)</text>
+    <text class="label" x="510" y="240">ตึก 6</text>
+    <text class="label" x="600" y="190">ตึก 7</text>
+    <text class="label" x="360" y="330">ตึก 8</text>
+    <text class="label" x="200" y="330">ตึก 9</text>
+    <text class="label" x="370" y="230">คูหาลูกเสือ</text>
+    <text class="label" x="610" y="570">โดมหน้าเสาธง</text>
+
+    <!-- เส้นนำทาง -->
+    <path id="route" fill="none" marker-end="url(#arrow)" />
+
+    <!-- หมุดผู้ใช้ + Ping -->
+    <circle id="userMarker" r="6" fill="#ff595e" cx="-100" cy="-100"/>
+    <circle id="userPulse" r="10" fill="none" stroke="#ff595e" stroke-width="2" cx="-100" cy="-100">
+      <animate attributeName="r" from="6" to="18" dur="1.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" from="1" to="0" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+  </svg>
 </div>
-
-<main id="mainContainer" class="full-width">
-    <section class="card building-detail">
-        <button id="backBtn" class="back-btn" onclick="resetToHome()">⬅️ กลับหน้าหลัก</button>
-        <h2 id="bName">🏛️ รายชื่ออาคารทั้งหมด</h2>
-        <p id="bDesc">กรุณาเลือกอาคารเพื่อดูข้อมูล</p>
-        <div id="imgWrapper" class="building-img-wrapper">
-            <img id="bImg" src="" alt="Building Image">
-        </div>
-        <button id="navBtn" class="nav-btn" onclick="getNavigation()">
-            📍 นำทางไปยังอาคารนี้ด้วย Google Maps
-        </button>
-        <div id="buildingGrid" class="building-grid"></div>
-    </section>
-
-    <section id="roomContainer" class="card" style="display: none;">
-        <h3 id="floorTitle">🏫 รายชื่อห้องเรียน</h3>
-        <div id="roomList"></div>
-    </section>
-</main>
-
-<button class="night-mode-toggle" onclick="toggleNight()">🌓</button>
 
 <script>
+/* ข้อมูลอาคาร (ใช้ภาพ local ป้องกันภาพหมดอายุ) */
 const buildings = {
-  1: {
-    name: "ตึก 1 (อาคารสุนีย์ นิมมานเหมินท์)",
+  1:{
+    name:"ตึก 1 (อาคารสุนีย์ นิมมานเหมินท์)",
     description: "ตึกหน้าทางเข้าของวิทยาลัย",
-    image: "images/b1.jpg",
-    lat: 13.675876211089093,
-    lng: 100.61612427234651,
-    floors: {
-      1: ["แผนกสาขาธุรกิจค้าปลีก","ห้องผู้อำนวยการวิทยาลัย","ห้องรองผู้อำนวยการวิทยาลัย","ห้องการเงิน","ห้องบุคลากร","ห้องบัญชี","ห้องบริหารงานทั่วไป","ห้องประชุมสุวรรณภูมิ","ห้องควบคุมสารสนเทศ","ห้องประชาสัมพันธ์","ห้องพักครู","ห้องปกครอง"],
-      2: ["แผนกสาขาการโรงแรม","ห้องงานทะเบียน","ห้องชมรมพุทธศาสนา","ห้องประชุมมูลนิธิฯ","ห้องบางนาเน็ต"]
-    }
+    image:"images/b1.jpg",
+    floors:{
+      1:["แผนกสาขาธุรกิจค้าปลีก","ห้องผู้อำนวยการวิทยาลัย","ห้องรองผู้อำนวยการวิทยาลัย","ห้องการเงิน","ห้องบุคลากร","ห้องบัญชี","ห้องบริหารงานทั่วไป","ห้องประชุมสุวรรณภูมิ","ห้องควบคุมสารสนเทศ","ห้องประชาสัมพันธ์","ห้องพักครู","ห้องปกครอง"],
+      2:["แผนกสาขาการโรงแรม","ห้องงานทะเบียน","ห้องชมรมพุทธศาสนา","ห้องประชุมมูลนิธิฯ","ห้องบางนาเน็ต"]
+    },
+    lat:13.675929, lng:100.616100, x:520, y:400
   },
-  2: {
-    name: "ตึก 2 (อาคารรุ่งเรือง)",
-    description: "ตึกสีเหลืองหลังตึก 1",
-    image: "images/b2.jpg",
-    lat: 13.675464436652378,
-    lng: 100.61618864536285,
-    floors: {
-      1: ["ห้องประชุมศรีนครินทร์","ห้องครัวการโรงแรม"],
-      2: ["แผนกสาขาบัญชี","ห้องเรียน 2201","ห้องเรียน 2203"],
-      3: ["แผนกสาขาโรงแรม","ห้องเรียน 2301","ห้องเรียน 2302","ห้องเรียน 2303","ห้องเรียน 2304"],
-      4: ["ห้องเรียน 2401","ห้องเรียน 2402","ห้องเรียน 2403","ห้องเรียน 2404"]
-    }
+  2:{
+    name:"ตึก 2 (อาคารรุ่งเรือง)",
+    description: "ตึกสีเหลืองหลังตึก1",
+    image:"images/b2.jpg",
+    floors:{
+      1:["ห้องประชุมศรีนครินทร์"],
+      2:["แผนกสาขาบัญชี","ห้องเรียน 2201","ห้องเรียน 2203"],
+      3:["แผนกสาขาโรงแรม","ห้องเรียน 2301","ห้องเรียน 2302","ห้องเรียน 2303","ห้องเรียน 2304"],
+      4:["ห้องเรียน 2401","ห้องเรียน 2402","ห้องเรียน 2403","ห้องเรียน 2404"]
+    },
+    lat:13.675492, lng:100.616211, x:600, y:480
   },
-  3: {
-    name: "ตึก 3 (อาคารรุ่งแสง)",
+  3:{
+    name:"ตึก 3 (อาคารรุ่งแสง)",
     description: "ตึก 3 สีแดงหลังตึก 2",
-    image: "images/b3.jpg",
-    lat: 13.675480,
-    lng: 100.616586,
-    floors: {
-      1: ["ห้องอุปกรณ์งานอาคารสถานที่","ห้องชมรมอนุรักษ์ธรรมชาติและสิ่งแวดล้อม","ห้องพยาบาล","ห้องเรียน 3101,3102","ห้องงานแนะแนวอาชีพและการจัดหางาน","ห้องงานอาคารสถานที่","ห้องงานโครงการพิเศษและบริการชุมชนและห้องพักครู"],
-      2: ["แผนกสาขาสามัญสัมพันธ์","ห้องเรียน 3201","ห้องเรียน 3202","ห้องเรียน 3203","ห้องเรียน 3204","ห้องเรียน 3205","ห้องเรียน 3206","ห้องเรียน 3207","ห้องเรียน 3208","ห้องเรียน 3209","ห้องเรียน 3210","ห้องพักครู"],
-      3: ["ห้องเรียน 3301","ห้องเรียน 3302","ห้องเรียน 3303","ห้องเรียน 3304","ห้องเรียน 3305","ห้องเรียน 3306","ห้องเรียน 3307","ห้องเรียน 3308","ห้องเรียน 3309","ห้องเรียน 3310","ห้องพักครู"],
-      4: ["ห้องเรียน 3401","ห้องเรียน 3402","ห้องเรียน 3403","ห้องเรียน 3404","ห้องเรียน 3405","ห้องเรียน 3406","ห้องเรียน 3407","ห้องเรียน 3408","ห้องเรียน 3409","ห้องเรียน 3410","ห้องพักครู"]
-    }
+    image:"images/b3.jpg",
+    floors:{
+      1:["ห้องอุปกรณ์งานอาคารสถานที่","ห้องชมรมอนุรักษ์ธรรมชาติและสิ่งแวดล้อม","ห้องพยาบาล","ห้องเรียน 3101,3102","ห้องงานแนะแนวอาชีพและการจัดหางาน","ห้องงานอาคารสถานที่","ห้องงานโครงการพิเศษและบริการชุมชนและห้องพักครู"],
+      2:["แผนกสาขาสามัญสัมพันธ์","ห้องเรียน 3201-3210","ห้องพักครู"],
+      3:["ห้องเรียน 3301-3310","ห้องพักครู"],
+      4:["ห้องเรียน 3401-3410","ห้องพักครู"]
+    },
+    lat:13.675388, lng:100.616557, x:710, y:400
   },
-  4: {
-    name: "อาคาร 4",
-    description: "อยู่ระหว่าง ตึก 1 กับ ตึก 2",
-    image: "images/b4.jpg",
-    lat: 13.675870998758946,
-    lng: 100.61660170555116,
-    floors: {
-      1: ["สหกรณ์วิทยาลัย", "B SHOP", "อาคารอเนกประสงค์"]
-    }
+  4:{
+    name:"อาคาร 4",
+    description: "อยู่ระหว่าง ตึก1 กับ ตึก2",
+    image:"images/b4.jpg",
+    floors:{
+      1:["สหกรณ์วิทยาลัย","B SHOP","อาคารอเนกประสงค์"]
+    },
+    lat:13.675897, lng:100.616593, x:600, y:340
   },
-  5: {
-    name: "ตึก 5 (พลศึกษา)",
-    description: "อาคารชนะ รุ่งแสง อยู่ข้างหลังโดมหน้าเสาธง",
-    image: "images/b5.jpg",
-    lat: 13.674922,
-    lng: 100.615722,
-    floors: {
-      1: ["โรงพลศึกษา (กีฬาในร่ม)"]
-    }
+  5:{
+    name:"ตึก 5 อาคารชนะ รุ่งแสง (พลศึกษา)",
+    description: "อยู่ข้างหลังโดมหน้าเสาธง",
+    image:"images/b5.jpg",
+    floors:{
+      1:["อาคารโรงพลศึกษาใช้สำหรับการเรียนกีฬาในร่ม"]
+    },
+    lat:13.674903, lng:100.615781, x:630, y:620
   },
-  6: {
-    name: "ตึก 6",
-    description: "อยู่ข้างตึก 1",
-    image: "images/b6.png",
-    lat: 13.676308834088655,
-    lng: 100.61654269695282,
-    floors: {
-      1: ["ห้องงานพัสดุ","ห้องสำนักงานสมาคมศิษย์เก่าพณิชยการบางนา","ห้องน้ำ"],
-      2: ["ห้องงานสื่อการเรียนการสอน","ห้องเก็บอุปกรณ์","ห้องน้ำ"],
-      3: ["ห้องประชุมสุขุมวิท","ห้องรับรองวิทยากร","ห้องน้ำ"],
-      4: ["ห้องเรียน 6401","ห้องเรียน 6402","ห้องเรียน 6403","ห้องเรียน 6404","ห้องอเนกประสงค์","ห้องพักครู"],
-      5: ["ห้องเรียนเทคโนโลยีบัณฑิต","ห้องเรียน 6501","ห้องเรียน 6502","ห้องเรียน 6503","ห้องเรียน 6504","ห้องเรียน 6505","ห้องเรียน 6506"],
-      6: ["แผนกสาขาการจัดการโลจิสติกส์","ห้องเรียน 6601","ห้องเรียน 6602","ห้องเรียน 6603","ห้องเรียน 6604","ห้องเรียน 6605"]
-    }
+  6:{
+    name:"ตึก 6 อาคารเรียน 6",
+    description: "อยู่ข้างตึก1",
+    image:"images/b6.jpg",
+    floors:{
+      1:["ห้องงานพัสดุ","ห้องสำนักงานสมาคมศิษย์เก่าพณิชยการบางนา","ห้องน้ำ"],
+      2:["ห้องงานสื่อการเรียนการสอน","ห้องเก็บอุปกรณ์","ห้องน้ำ"],
+      3:["ห้องประชุมสุขุมวิท","ห้องรับรองวิทยากร","ห้องน้ำ"],
+      4:["ห้องเรียน 6401-6404","ห้องอเนกประสงค์","ห้องพักครู"],
+      5:["ห้องเรียนเทคโนโลยีบัณฑิต","ห้องเรียน 6501-6506"],
+      6:["แผนกสาขาการจัดการโลจิสติกส์","ห้องเรียน 6601-6605"]
+    },
+    lat:13.676359, lng:100.616549, x:510, y:250
   },
-  7: {
-    name: "ตึก 7",
+  7:{
+    name:"ตึก 7 อาคารเรียน 7",
     description: "อยู่ข้างหลังโรงอาหารเก่า",
-    image: "images/b7.jpg",
-    lat: 13.676139,
-    lng: 100.616771,
-    floors: {
-      1: ["ห้องปฏิบัติการขาย","7102","ห้องน้ำ"],
-      2: ["ห้องงานพัฒนาหลักสูตรและการสอน","ห้องงานวัดผลและประเมินผล","แผนกสาขาการตลาด","ห้องน้ำครู"],
-      3: ["ห้องเรียน 7301","ห้องเรียน 7302","ห้องเรียน 7303","ห้องเรียน 7304","ห้องเรียน 7305","ห้องเรียน 7306","ห้องเรียน 7307","ห้องเรียน 7308","ห้องพักครู","ห้องน้ำครู"],
-      4: ["ห้องเรียน 7401","ห้องเรียน 7402","ห้องเรียน 7403","ห้องเรียน 7404","ห้องเรียน 7405","ห้องเรียน 7406","ห้องเรียน 7407","ห้องเรียน 7408","ห้องพักครู","ห้องน้ำครู"],
-      5: ["แผนกสาขาจัดการ","ห้องเรียน 7501","ห้องเรียน 7502","ห้องเรียน 7503","ห้องเรียน 7504","ห้องเรียน 7505","ห้องเรียน 7506","ห้องเรียน 7507","ห้องน้ำครู"],
-      6: ["ห้องเรียน 7601","ห้องเรียน 7602","ห้องเรียน 7603","ห้องเรียน 7604","ห้องเรียน 7605","ห้องเรียน 7606","ห้องเรียน 7607","ห้องเรียน 7608","ห้องพักครู","ห้องน้ำครู"],
-      7: ["ห้องเรียน 7701","ห้องเรียน 7702","ห้องเรียน 7703","ห้องเรียน 7704","ห้องเรียน 7705","ห้องเรียน 7706","ห้องเรียน 7707","ห้องเรียน 7708","คณะวิชาการเลขานุการ","ห้องน้ำครู"]
-    }
+    image:"images/b7.jpg",
+    floors:{
+      1:["ห้องปฏิบัติการขาย","7102","ห้องน้ำ"],
+      2:["ห้องงานพัฒนาหลักสูตรและการสอน","ห้องงานวัดผลและประเมินผล","แผนกสาขาการตลาด"],
+      3:["ห้องเรียน 7301-7308","ห้องพักครู"],
+      4:["ห้องเรียน 7401-7408","ห้องพักครู"],
+      5:["แผนกสาขาจัดการ","ห้องเรียน 7501-7507"],
+      6:["ห้องเรียน 7601-7608","ห้องพักครู"],
+      7:["ห้องเรียน 7701-7708","คณะวิชาการเลขานุการ"]
+    },
+    lat:13.676152, lng:100.616919, x:575, y:190
   },
-  8: {
-    name: "ตึก 8 (อาคารเฉลิมพระเกียรติ)",
-    description: "อยู่ระหว่างตึก 9 กับ ตึก 6",
-    image: "images/b8.jpg",
-    lat: 13.676762305536153,
-    lng: 100.61601161956787,
-    floors: {
-      1: ["ลานอเนกประสงค์ใช้ทำกิจกรรมต่างๆ","ห้องชมรมเลขานุการ","ห้องอธท","ห้องประชุมพันธ์ทิพย์"],
-      2: ["โรงอาหาร","ห้องน้ำ","ห้องอาหารครู"],
-      3: ["ห้องประชุมใหญ่","ห้องน้ำ","ห้องควบคุมเสียง แสง และห้องกำกับเวที"]
-    }
+  8:{
+    name:"ตึก 8 อาคารเฉลิมพระเกียรติ",
+    description: "อยู่ระหว่างตึก9 กับ ตึก6",
+    image:"images/b8.jpg",
+    floors:{
+      1:["ลานอเนกประสงค์","ห้องชมรมเลขานุการ","ห้องอธท","ห้องประชุมพันธ์ทิพย์"],
+      2:["โรงอาหาร","ห้องน้ำ","ห้องอาหารครู"],
+      3:["ห้องประชุมใหญ่","ห้องควบคุมเสียง แสง"]
+    },
+    lat:13.676763, lng:100.616052, x:350, y:320
   },
-  9: {
-    name: "ตึก 9",
-    description: "อาคารเรียนข้างตึก 8",
-    image: "images/b9.jpg",
-    lat: 13.677095893169858,
-    lng: 100.61555027961732,
-    floors: {
-      1: ["ห้องทวิภาคี","ห้องแผนกสาขาวิชาธุรกิจค้าปลีก","ห้องเรียน 9102","ห้องน้ำ"],
-      2: ["สำนักงานฝ่ายแผนงาน","ห้องประชุมอาคาร 9","ห้องงานวางแผนและ งบประมาณ","ห้องงานศูนย์ข้อมูลสารสนเทศ","ห้องงานวิจัยพัฒนาและ มาตรฐานการศึกษา"],
-      3: ["ห้องสมุดของวิทยาลัย","ห้องศูนย์อินเตอร์เน็ต","ห้องเรียน 9301","ห้องเรียน 9302","ห้องเรียน 9303","ห้องน้ำ"],
-      4: ["แผนกสาขาภาษาต่างประเทศ","ห้องเรียน 9401","ห้องเรียน 9402","ห้องเรียน 9403","ห้องเรียน 9404","ห้องเรียน 9405","ห้องเรียน 9406","ห้องเรียน 9409"],
-      5: ["ห้องเรียน 9501","ห้องเรียน 9502","ห้องเรียน 9503","ห้องเรียน 9504","ห้องเรียน 9505","ห้องเรียน 9506"],
-      6: ["ห้องพักครู","แผนกสาขาคอมพิวเตอร์","ห้องเรียน 9601","ห้องเรียน 9602","ห้องเรียน 9605","ห้องเรียน 9606"],
-      7: ["แผนกสาขาเทคโนโลยีสารสนเทศ","ห้องพักครู","ห้องเรียน 9701","ห้องเรียน 9702","ห้องเรียน 9705","ห้องเรียน 9706"]
-    }
+  9:{
+    name:"ตึก 9 อาคารเรียน 9",
+    description: "อยู่ข้างตึก8",
+    image:"images/b9.jpg",
+    floors:{
+      1:["ห้องทวิภาคี","ห้องแผนกสาขาวิชาธุรกิจค้าปลีก","ห้องเรียน 9102"],
+      2:["สำนักงานฝ่ายแผนงาน","ห้องประชุมอาคาร 9","ห้องงานวางแผนและงบประมาณ"],
+      3:["ห้องสมุดวิทยาลัย","ห้องศูนย์อินเตอร์เน็ต","ห้องเรียน 9301-9303"],
+      4:["แผนกสาขาภาษาต่างประเทศ","ห้องเรียน 9401-9409"],
+      5:["ห้องเรียน 9501-9506"],
+      6:["แผนกสาขาคอมพิวเตอร์","ห้องเรียน 9601-9606"],
+      7:["แผนกสาขาเทคโนโลยีสารสนเทศ","ห้องเรียน 9701-9706"]
+    },
+    lat:13.677123, lng:100.615585, x:200, y:330
   },
-  10: {
-    name: "คูหาลูกเสือวิสามัญ",
-    description: "อยู่ข้างหลังตึก 8",
-    image: "images/b10.jpg",
-    lat: 13.676903037876762,
-    lng: 100.61640322208406,
-    floors: {
-      1: ["พื้นที่อนุสรณ์"]
-    }
+  10:{
+    name:"คูหาลูกเสือวิสามัญ",
+    description: "อยู่ข้างหลังตึก8",
+    image:"images/b10.jpg",
+    floors:{ 1:["พื้นที่อนุสรณ์"] },
+    lat:13.676879, lng:100.616326, x:370, y:220
   },
-  11: {
-    name: "สนามฟุตบอล",
-    description: "อยู่ข้างตึก 9",
-    image: "images/b11.jpg",
-    lat: 13.677346083584968,
-    lng: 100.61585068702699,
-    floors: {
-      1: ["สนามแข่งขัน", "แสตนด์ที่นั่ง"]
-    }
+  11:{
+    name:"สนามฟุตบอล",
+    description: "อยู่ข้างตึก9",
+    image:"images/b11.jpg",
+    floors:{ 1:["สนามแข่งขัน","สแตน"] },
+    lat:13.677384, lng:100.615801, x:210, y:240
   },
-  12: {
-    name: "โดมหน้าเสาธง",
-    description: "พื้นที่ทำกิจกรรมข้างตึก 5",
-    image: "images/b12.jpg",
-    lat: 13.675165,
-    lng: 100.615899,
-    floors: {
-      1: ["สนามกิจกรรม", "พื้นที่ออกกำลังกาย"]
-    }
-  },
-  13: {
-    name: "หน้าวิทยาลัย (ประตูทางเข้า)",
-    description: "จุดตรวจและทางเข้าหลักของวิทยาลัย",
-    image: "images/b13.png", 
-    lat: 13.676129,
-    lng: 100.615918,
-    floors: {
-      1: ["จุดรับแลกบัตร", "จุดสอบถามข้อมูล"]
-    }
+  12:{
+    name:"โดมหน้าเสาธง",
+    description: "อยู่ข้างตึก5",
+    image:"images/b12.jpg",
+    floors:{ 1:["สนามกิจกรรม","พื้นที่ออกกำลังกาย"] },
+    lat:13.675155, lng:100.615933, x:610, y:560
   }
 };
 
-const bSelect = document.getElementById("buildingSelect");
-const fSelect = document.getElementById("floorSelect");
-const roomListDiv = document.getElementById("roomList");
+/* คลิกอาคาร */
+Object.keys(buildings).forEach(id=>{
+  const el = document.getElementById('b'+id);
+  if(el) el.onclick = () => showBuilding(id);
+});
 
-function init() {
-    const grid = document.getElementById("buildingGrid");
-    grid.innerHTML = "";
-    bSelect.innerHTML = '<option value="">-- เลือกอาคาร --</option>';
+/* แสดงข้อมูลอาคาร */
+function showBuilding(id){
+  clearHighlight();
+  const el = document.getElementById('b'+id);
+  if(el) el.classList.add('highlight');
 
-    for (const id in buildings) {
-        const b = buildings[id];
-        const opt = document.createElement("option");
-        opt.value = id;
-        opt.textContent = b.name;
-        bSelect.appendChild(opt);
-
-        const card = document.createElement("div");
-        card.className = "building-card";
-        card.onclick = () => selectBuilding(id);
-        card.innerHTML = `
-            <img src="${b.image}" class="card-img" alt="${b.name}">
-            <div class="card-info">
-                <h4>${b.name}</h4>
-                <p>${b.description}</p>
-            </div>
-        `;
-        grid.appendChild(card);
-    }
-
-    // Service Worker Registration for PWA
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
-    }
+  const b = buildings[id];
+  document.getElementById('info').innerHTML = `
+    <h3>${b.name}</h3>
+    ${b.image ? `<img src="${b.image}" style="width:100%;border-radius:10px;" onerror="this.style.display='none'">` : ""}
+    <p>📝 ${b.description || "-"}</p>
+    <p>📍 Lat ${b.lat}, Lng ${b.lng}</p>
+  `;
 }
 
-function selectBuilding(id) {
-    bSelect.value = id;
-    onBuildingChange();
+function clearHighlight(){
+  document.querySelectorAll('.building').forEach(e => e.classList.remove('highlight', 'selected', 'dim'));
 }
 
-function onBuildingChange() {
-    const id = bSelect.value;
-    if (!id) { resetToHome(); return; }
+/* 🔍 ค้นหาห้อง */
+const searchInput = document.getElementById('search');
+searchInput.oninput = () => {
+  let keyword = searchInput.value.trim().toLowerCase().replace(/\s+/g, "");
+  keyword = keyword.replace("ห้อง", "").replace("ตึก", "").replace("ชั้น", "");
 
+  if (!keyword) return;
+  clearHighlight();
+
+  const match = (text) => text.toString().toLowerCase().replace(/\s+/g, "").includes(keyword);
+
+  for (const id in buildings) {
     const b = buildings[id];
-    document.getElementById("bName").textContent = b.name;
-    document.getElementById("bDesc").textContent = b.description;
-    document.getElementById("bImg").src = b.image;
-    document.getElementById("imgWrapper").style.display = "block";
-    document.getElementById("navBtn").style.display = "block";
-    document.getElementById("buildingGrid").style.display = "none";
-    document.getElementById("backBtn").style.display = "flex";
-    
-    document.getElementById("mainContainer").classList.remove("full-width");
-    document.getElementById("roomContainer").style.display = "block";
-
-    fSelect.innerHTML = '<option value="">-- เลือกชั้น --</option>';
-    for (const floor in b.floors) {
-        const opt = document.createElement("option");
-        opt.value = floor;
-        opt.textContent = "ชั้น " + floor;
-        fSelect.appendChild(opt);
+    if (match(b.name)) {
+      showBuilding(id);
+      return;
     }
-    roomListDiv.innerHTML = '<p style="text-align:center; color:var(--text-muted)">กรุณาเลือกชั้นเรียน</p>';
+  }
+
+  for (const id in buildings) {
+    const b = buildings[id];
+    for (const floor in b.floors) {
+      for (const room of b.floors[floor]) {
+        if (match(room)) {
+          document.getElementById("b" + id)?.classList.add("highlight");
+          document.getElementById('info').innerHTML = `
+            <h3>🔍 พบห้อง</h3>
+            <p>🏫 <b>${room}</b><br>📍 ตึก: ${b.name}<br>🧱 ชั้น: ${floor}</p>
+            ${b.image ? `<img src="${b.image}" style="width:100%;border-radius:10px" onerror="this.style.display='none'">` : ""}
+          `;
+          return;
+        }
+      }
+    }
+  }
+  document.getElementById('info').innerHTML = "❌ ไม่พบอาคารหรือห้องที่ค้นหา";
+};
+
+/* Populating Dropdowns */
+const fromSelect = document.getElementById('from');
+const toSelect = document.getElementById('to');
+const buildingSelect = document.getElementById("buildingSelect");
+const floorSelect = document.getElementById("floorSelect");
+const roomList = document.getElementById("roomList");
+
+for(const id in buildings){
+  fromSelect.innerHTML += `<option value="${id}">${buildings[id].name}</option>`;
+  toSelect.innerHTML += `<option value="${id}">${buildings[id].name}</option>`;
+  buildingSelect.innerHTML += `<option value="${id}">${buildings[id].name}</option>`;
+}
+
+/* คำนวณเส้นทาง + Navigation Steps */
+function findRoute(){
+  const fromId = fromSelect.value;
+  const toId = toSelect.value;
+  if(!fromId || !toId) return;
+
+  const a = buildings[fromId];
+  const b = buildings[toId];
+
+  // วาดเส้นโค้ง smooth
+  const cpX = (a.x + b.x) / 2;
+  const cpY = (a.y + b.y) / 2 - 50; 
+  document.getElementById("route").setAttribute("d", `M ${a.x} ${a.y} Q ${cpX} ${cpY} ${b.x} ${b.y}`);
+
+  // Navigation Steps
+  let hDir = b.x > a.x ? "➡️ เลี้ยวขวา" : "⬅️ เลี้ยวซ้าย";
+  let vDir = b.y > a.y ? "👇 เดินลงไปทางทิศใต้" : "👆 เดินขึ้นไปทางทิศเหนือ";
+
+  document.getElementById('info').innerHTML = `
+    <div style="background: #e3f2fd; padding: 12px; border-radius: 10px; border-left: 5px solid #2196f3; color: #0d47a1;">
+      <strong>🧭 ขั้นตอนการเดินทาง:</strong>
+      <ul style="margin: 8px 0; padding-left: 18px; line-height: 1.5;">
+        <li>🚩 เริ่มต้นจาก <b>${a.name}</b></li>
+        <li>${hDir} ตามแนวถนน</li>
+        <li>${vDir}</li>
+        <li>🏁 ถึงจุดหมาย <b>${b.name}</b></li>
+      </ul>
+    </div>
+  `;
+
+  clearHighlight();
+  document.getElementById("b" + fromId)?.classList.add("highlight");
+  document.getElementById("b" + toId)?.classList.add("highlight", "selected");
+}
+
+/* GPS */
+const MAP_BOUNDS = {
+  latMax: 13.676952, latMin: 13.674672,
+  lngMin: 100.614007, lngMax: 100.616966
+};
+
+function locateMe(){
+  if(!navigator.geolocation){
+    alert("อุปกรณ์ไม่รองรับ GPS");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      let lat = pos.coords.latitude - 0.00099999;
+      let lng = pos.coords.longitude - 0.00090;
+
+      if(lat < MAP_BOUNDS.latMin || lat > MAP_BOUNDS.latMax || lng < MAP_BOUNDS.lngMin || lng > MAP_BOUNDS.lngMax){
+        document.getElementById('info').innerHTML = "⚠️ คุณอยู่นอกพื้นที่สถานศึกษา";
+        userMarker.style.display = "none";
+        userPulse.style.display = "none";
+        return;
+      }
+
+      const x = ((lng - MAP_BOUNDS.lngMin) / (MAP_BOUNDS.lngMax - MAP_BOUNDS.lngMin)) * 1000;
+      const y = ((MAP_BOUNDS.latMax - lat) / (MAP_BOUNDS.latMax - MAP_BOUNDS.latMin)) * 800;
+
+      userMarker.setAttribute("cx", x); userMarker.setAttribute("cy", y);
+      userPulse.setAttribute("cx", x); userPulse.setAttribute("cy", y);
+      userMarker.style.display = "block"; userPulse.style.display = "block";
+
+      document.getElementById('info').innerHTML = `
+        <h3>📍 ตำแหน่งของคุณ</h3>
+        <p>Lat ${lat.toFixed(6)}<br>Lng ${lng.toFixed(6)}</p>
+      `;
+    },
+    err => alert("ไม่สามารถเข้าถึง GPS ได้"),
+    { enableHighAccuracy:true }
+  );
+}
+
+/* Floors & Rooms Dropdown */
+function updateFloors() {
+  floorSelect.innerHTML = '<option value="">เลือกชั้น</option>';
+  roomList.innerHTML = "";
+  const b = buildings[buildingSelect.value];
+  if (!b) return;
+
+  clearHighlight();
+  document.getElementById("b" + buildingSelect.value)?.classList.add("highlight");
+
+  for (const floor in b.floors) {
+    floorSelect.innerHTML += `<option value="${floor}">ชั้น ${floor}</option>`;
+  }
 }
 
 function showRooms() {
-    const bId = bSelect.value;
-    const floor = fSelect.value;
-    if (!bId || !floor) return;
+  roomList.innerHTML = "";
+  const b = buildings[buildingSelect.value];
+  const f = floorSelect.value;
+  if (!b || !f) return;
 
-    const rooms = buildings[bId].floors[floor];
-    document.getElementById("floorTitle").textContent = `🏫 ชั้น ${floor} - ${buildings[bId].name}`;
-    roomListDiv.innerHTML = "";
-
-    rooms.forEach(room => {
-        const item = document.createElement("div");
-        item.className = "room-item";
-        let icon = "📖";
-        if (room.includes("คอม") || room.includes("สารสนเทศ")) icon = "💻";
-        else if (room.includes("ประชุม")) icon = "🤝";
-        else if (room.includes("ครู")) icon = "👨‍🏫";
-        else if (room.includes("น้ำ")) icon = "🚻";
-        
-        item.innerHTML = `<div class="room-icon">${icon}</div> <span>${room}</span>`;
-        roomListDiv.appendChild(item);
-    });
+  let html = `<h4>${b.name} – ชั้น ${f}</h4><ul>`;
+  b.floors[f].forEach(r => { html += `<li>🏫 ${r}</li>`; });
+  html += "</ul>";
+  roomList.innerHTML = html;
 }
 
-function handleSearch() {
-    const query = document.getElementById("search").value.toLowerCase().trim();
-    if (!query) return;
-
-    for (const id in buildings) {
-        for (const floor in buildings[id].floors) {
-            const match = buildings[id].floors[floor].find(r => r.toLowerCase().includes(query));
-            if (match) {
-                selectBuilding(id);
-                fSelect.value = floor;
-                showRooms();
-                setTimeout(() => {
-                    const items = roomListDiv.querySelectorAll(".room-item");
-                    items.forEach(el => {
-                        if (el.textContent.toLowerCase().includes(query)) el.classList.add("highlight-item");
-                    });
-                }, 100);
-                return;
-            }
-        }
-    }
+function toggleNight(){
+  document.body.classList.toggle("night");
+}
+function closeHelp() {
+  document.getElementById("helpOverlay").style.display = "none";
 }
 
-function filterByType(type) {
-    document.getElementById("search").value = type;
-    handleSearch();
+/* Service Worker Registration */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
 }
-
-function getNavigation() {
-    const id = bSelect.value;
-    const b = buildings[id];
-    if (b && b.lat && b.lng) {
-        const url = `https://www.google.com/maps/search/?api=1&query=${b.lat},${b.lng}`;
-        window.open(url, '_blank');
-    }
-}
-
-function resetToHome() {
-    document.getElementById("mainContainer").classList.add("full-width");
-    document.getElementById("roomContainer").style.display = "none";
-    document.getElementById("buildingGrid").style.display = "grid";
-    document.getElementById("imgWrapper").style.display = "none";
-    document.getElementById("navBtn").style.display = "none";
-    document.getElementById("backBtn").style.display = "none";
-    document.getElementById("bName").textContent = "🏛️ รายชื่ออาคารทั้งหมด";
-    document.getElementById("bDesc").textContent = "กรุณาเลือกอาคารเพื่อดูข้อมูล";
-    bSelect.value = "";
-    fSelect.innerHTML = '<option value="">-- เลือกชั้น --</option>';
-    document.getElementById("search").value = "";
-}
-
-function toggleNight() { document.body.classList.toggle("night"); }
-
-window.onload = init;
 </script>
-
 </body>
 </html>
