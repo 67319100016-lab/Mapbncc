@@ -14,69 +14,137 @@
 <style>
 :root { --bg:#f7f9fc; --panel:#ffffff; --primary:#4dabf7; --text:#212529; }
 *{box-sizing:border-box}
-body{ margin:0; font-family:system-ui,-apple-system; background:var(--bg); display:flex; height:100vh; overflow: hidden; }
+body{ margin:0; font-family:system-ui,-apple-system; background:var(--bg); display:flex; flex-direction:column; height:100vh; overflow: hidden; }
 
-/* Landing Page Overlay */
-#landingPage {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: var(--bg);
-    z-index: 99999;
+/* Global Top Control Header */
+#top-control-panel {
+    background: var(--panel);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    padding: 12px 16px;
+    z-index: 2000;
     display: flex;
     flex-direction: column;
+    gap: 10px;
+}
+
+.brand-header {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
+}
+.brand-title {
+    color: var(--primary);
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.top-mode-switcher {
+    display: flex;
+    background: #e2e8f0;
+    padding: 4px;
+    border-radius: 12px;
+    width: 100%;
+}
+.top-mode-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #475569;
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 0;
+}
+.top-mode-btn.active {
+    background: white;
+    color: #0d6efd;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Control Bar for Mode 1 (Building Info) */
+#controls-mode-info {
+    display: block;
+}
+
+/* Control Bar for Mode 2 (Navigation & Map) */
+#controls-mode-nav {
+    display: none;
+}
+
+.nav-buttons-grid {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.nav-buttons-grid button {
+    flex: 1;
+    min-width: 110px;
+    margin-bottom: 0;
+}
+
+/* Main Display Container Below Top Controls */
+#main-display-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+}
+
+/* Mode 1 Content: Full Screen Building Info (No Map) */
+#info-standalone-view {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
     padding: 20px;
+    overflow-y: auto;
+}
+.info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto 20px auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+/* Mode 2 Content: Full Screen Map */
+#map-view {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+#map-wrap { width: 100%; height: 100%; position: relative; }
+#map { width: 100%; height: 100%; }
+
+/* Info Banner overlay on Map */
+#nav-info-banner {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    padding: 12px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    z-index: 1000;
+    width: 90%;
+    max-width: 450px;
+    font-size: 13px;
+    border-left: 4px solid #4dabf7;
     text-align: center;
 }
-#landingPage h1 { color: var(--primary); margin-bottom: 30px; font-size: 2.2rem; }
-.mode-options { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 500px; width: 100%; }
-.mode-card {
-    background: #fff;
-    padding: 30px 20px;
-    border-radius: 20px;
-    flex: 1;
-    min-width: 180px;
-    cursor: pointer;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-}
-.mode-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 15px 30px rgba(77,171,247,0.2); }
-.mode-card .icon { font-size: 45px; margin-bottom: 15px; }
-.mode-card .title { font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; color: var(--text); }
-.mode-card .desc { font-size: 0.85rem; color: #666; }
 
-/* Main App Layout */
-#sidebar{ width:320px; background:var(--panel); box-shadow:2px 0 12px rgba(0,0,0,.1); padding:16px; overflow-y: auto; z-index: 1000; }
-#map-wrap{ flex:1; position: relative; }
-#map { width: 100%; height: 100%; }
-input,select,button{ width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd; }
-button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; border: none; cursor: pointer; font-weight: bold; }
-#info{ margin-top:10px; padding:15px; background:#f1f5f9; border-radius:8px; border-left: 4px solid #4dabf7; font-size: 14px; }
+input, select, button { width:100%; padding:9px 12px; border-radius:8px; border:1px solid #ddd; margin-bottom:0; }
+button { background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; border: none; cursor: pointer; font-weight: bold; }
 
-/* Header Switcher inside Sidebar */
-.mode-switch-btn {
-    background: #e2e8f0;
-    color: #475569;
-    font-size: 11px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    margin-bottom: 12px;
-    width: auto;
-    display: inline-block;
-}
-
-@media (max-width: 600px) {
-    body { display: flex; flex-direction: row; }
-    #sidebar { width: 40%; min-width: 140px; padding: 10px; font-size: 13px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
-    #map-wrap { width: 60%; flex: none; }
-    #sidebar h2 { font-size: 1.1rem; margin-bottom: 8px; }
-    input, select, button { padding: 8px; font-size: 12px; margin-bottom: 6px; }
-    .search-results { width: calc(100% - 20px); font-size: 12px; }
-    #info { font-size: 12px; padding: 8px; }
-}
-
+/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
@@ -112,10 +180,8 @@ button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; borde
   background: #f1f5f9;
   padding: 10px;
   border-radius: 10px;
-  display: none;
 }
 .modal-floor-info ul { padding-left: 20px; margin: 5px 0; }
-.btn-floor { background: #6c757d; margin-top: 10px; }
 
 .search-results {
     background: white;
@@ -124,15 +190,16 @@ button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; borde
     max-height: 200px;
     overflow-y: auto;
     position: absolute;
-    width: calc(320px - 32px);
-    z-index: 2000;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    z-index: 3000;
 }
-.search-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 14px; color: #333; }
+.search-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 13px; color: #333; }
 .search-item:hover { background: #f0f7ff; color: #0d6efd; }
 
 .red-circle-marker {
-    width: 13px;
-    height: 11px;
+    width: 13px; height: 11px;
     background-color: #ff4d4d;
     border: 2.5px solid #ffffff;
     border-radius: 50%;
@@ -149,57 +216,70 @@ button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; borde
 
 <body>
 
-<!-- Landing Screen (Choice selection) -->
-<div id="landingPage">
-    <h1>🏫 BNCC MAP</h1>
-    <div class="mode-options">
-        <div class="mode-card" onclick="selectMode('nav')">
-            <div class="icon">🧭</div>
-            <div class="title">ดูแผนที่และนำทาง</div>
-            <div class="desc">ดูแผนที่วิทยาลัย, ค้นหาเส้นทาง, พิกัด GPS เข็มทิศ</div>
+<!-- ⬆️ ALL CONTROLS IN THE TOP HEADER -->
+<div id="top-control-panel">
+    <div class="brand-header">
+        <div class="brand-title">🏫 BNCC MAP</div>
+    </div>
+    
+    <!-- Top Main Switcher -->
+    <div class="top-mode-switcher">
+        <button id="btn-mode-info" class="top-mode-btn active" onclick="switchMode('info')">🏢 1. ค้นหาข้อมูลอาคาร (ไม่มีแมพ)</button>
+        <button id="btn-mode-nav" class="top-mode-btn" onclick="switchMode('nav')">🧭 2. ดูแผนที่และนำทาง</button>
+    </div>
+
+    <!-- 🏢 Mode 1 Top Controls: Select Building -->
+    <div id="controls-mode-info">
+        <select id="standaloneBuildingSelect" onchange="renderStandaloneBuilding(this.value)">
+            <option value="">-- เลือกอาคารที่ต้องการดูข้อมูล --</option>
+        </select>
+    </div>
+
+    <!-- 🧭 Mode 2 Top Controls: Navigation Inputs & Buttons -->
+    <div id="controls-mode-nav">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+            <div style="flex: 1; min-width: 160px; position: relative;">
+                <input id="search" placeholder="🔍 ค้นหาห้องหรือตึก..." oninput="handleSearch()" onkeydown="if(event.key === 'Enter') performSearch()">
+                <div id="searchResults" class="search-results"></div>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+                <select id="from"><option value="">จุดเริ่มต้น</option></select>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+                <select id="to"><option value="">จุดหมาย</option></select>
+            </div>
         </div>
-        <div class="mode-card" onclick="selectMode('info')">
-            <div class="icon">🏢</div>
-            <div class="title">ค้นหาข้อมูลอาคาร</div>
-            <div class="desc">ดูรายชื่อตึก, แปลนห้องเรียนแต่ละชั้น, รูปถ่ายอาคาร</div>
+        <div class="nav-buttons-grid">
+            <button onclick="findRoute()">🧭 แนะนำเส้นทาง</button>
+            <button onclick="locateMe()" style="background: #20c997;">📍 ตำแหน่งของฉัน (GPS)</button>
+            <button onclick="resetMap()" style="background: #f57979;">🔄 รีเซ็ต</button>
         </div>
     </div>
 </div>
 
-<!-- Main App UI -->
-<div id="sidebar">
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h2 style="color: #4dabf7; text-shadow: 1px 1px 3px rgba(77,171,247,0.3); margin: 0 0 5px 0;">BNCC Map</h2>
-    <button class="mode-switch-btn" onclick="openLanding()">🔄 เปลี่ยนโหมด</button>
-  </div>
-
-  <!-- Section 1: Navigation Mode -->
-  <div id="sectionNav">
-    <div style="position: relative;">
-      <input id="search" placeholder="🔍 ค้นหาชื่อหรือเลขห้อง..." oninput="handleSearch()" onkeydown="if(event.key === 'Enter') performSearch()">
-      <div id="searchResults" class="search-results"></div>
+<!-- ⬇️ DISPLAY AREA BELOW TOP CONTROLS -->
+<div id="main-display-container">
+    
+    <!-- Mode 1 Display: Pure Information View (No Map) -->
+    <div id="info-standalone-view">
+        <div class="info-card">
+            <div id="standaloneDetails">
+                <p style="color: #64748b; text-align: center; padding: 30px 0;">โปรดเลือกอาคารจากเมนูด้านบนเพื่อดูข้อมูลห้องเรียนและรายละเอียด</p>
+            </div>
+        </div>
     </div>
-    <h4>🧭 ระบบนำทาง</h4>
-    <select id="from"><option value="">เลือกจุดเริ่มต้น</option></select>
-    <select id="to"><option value="">เลือกจุดหมาย</option></select>
-    <button onclick="findRoute()">🧭 แนะนำเส้นทาง</button>
-    <button onclick="locateMe()" style="background: #20c997;">📍 ตำแหน่งของฉัน</button>
-    <button onclick="resetMap()" style="background: #f57979; margin-top: 5px; padding: 3px 10px; font-size: 10px; border-radius: 6px; width: fit-content; margin-left: auto; margin-right: auto; display: block;">🔄 ล้างค่า / เริ่มใหม่</button>
-  </div>
 
-  <!-- Section 2: Building Info Mode -->
-  <div id="sectionInfo">
-    <h3>📚 ข้อมูลอาคาร</h3>
-    <select id="buildingSelect" onchange="if(this.value) showBuilding(this.value)">
-      <option value="">เลือกอาคารเพื่อดูข้อมูล</option>
-    </select>
-  </div>
+    <!-- Mode 2 Display: Full Screen Interactive Map -->
+    <div id="map-view">
+        <div id="map-wrap">
+            <div id="map"></div>
+            <div id="nav-info-banner">คลิกหมุดบนแผนที่ หรือเลือกจุดเริ่มต้น-จุดหมายด้านบนเพื่อนับเส้นทาง</div>
+        </div>
+    </div>
 
-  <div id="info">คลิกหมุดบนแผนที่เพื่อดูข้อมูล</div>
 </div>
 
-<div id="map-wrap"><div id="map"></div></div>
-
+<!-- Modal Dialog -->
 <div id="modalOverlay" class="modal-overlay" onclick="closeModal()">
   <div class="modal-content" onclick="event.stopPropagation()">
     <span class="close-btn" onclick="closeModal()">&times;</span>
@@ -210,22 +290,16 @@ button{ background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; borde
 <script>
 const buildings = {
   1: {
-    name: "ตึก 1 (อาคารสุนีย์ นิมมานเหมินท์)",
-    description: "ตึกหน้าทางเข้าของวิทยาลัย",
-    image: "images/b1.jpg",
-    lat:13.675876211089093,
-    lng: 100.61612427234651,
+    name: "ตึก 1 (อาคารสุนีย์ นิมมานเหมินท์)", description: "ตึกหน้าทางเข้าของวิทยาลัย", image: "images/b1.jpg",
+    lat:13.675876211089093, lng: 100.61612427234651,
     floors: {
       1:["แผนกสาขาธุรกิจค้าปลีก","ห้องผู้อำนวยการวิทยาลัย","ห้องรองผู้อำนวยการวิทยาลัย","ห้องการเงิน","ห้องบุคลากร","ห้องบัญชี","ห้องบริหารงานทั่วไป","ห้องประชุมสุวรรณภูมิ","ห้องควบคุมสารสนเทศ","ห้องประชาสัมพันธ์","ห้องพักครู","ห้องปกครอง"],
       2:["แผนกสาขาการโรงแรม","ห้องงานทะเบียน","2ห้องชมรมพุทธศาสนา","ห้องประชุมมูลนิธิฯ","ห้องบางนาเน็ต"]
     }
   },
   2: {
-    name: "ตึก 2 (อาคารรุ่งเรือง)",
-    description: "ตึกสีเหลืองหลังตึก 1",
-    image: "images/b2.jpg",
-    lat: 13.675464436652378,
-    lng: 100.61618864536285,
+    name: "ตึก 2 (อาคารรุ่งเรือง)", description: "ตึกสีเหลืองหลังตึก 1", image: "images/b2.jpg",
+    lat: 13.675464436652378, lng: 100.61618864536285,
     floors: {
       1:["ห้องประชุมศรีนครินทร์","ห้องครัวการโรงแรม"],
       2:["แผนกสาขาบัญชี","ห้องเรียน 2201","ห้องเรียน 2203"],
@@ -234,44 +308,26 @@ const buildings = {
     }
   },
   3: {
-    name: "ตึก 3 (อาคารรุ่งแสง)",
-    description: "ตึก 3 สีแดงหลังตึก 2",
-    image: "images/b3.jpg",
-    lat: 13.675480,
-    lng: 100.616586,
+    name: "ตึก 3 (อาคารรุ่งแสง)", description: "ตึก 3 สีแดงหลังตึก 2", image: "images/b3.jpg",
+    lat: 13.675480, lng: 100.616586,
     floors: {
       1:["ห้องอุปกรณ์งานอาคารสถานที่","ห้องชมรมอนุรักษ์ธรรมชาติและสิ่งแวดล้อม","ห้องพยาบาล","ห้องเรียน 3101,3102","ห้องงานแนะแนวอาชีพและการจัดหางาน","ห้องงานอาคารสถานที่","ห้องงานโครงการพิเศษและบริการชุมชนและห้องพักครู"],
-      2:["แผนกสาขาสามัญสัมพันธ์","ห้องเรียน","3201","3202","3203","3204","3205","3206","3207","3208","3209","3210","ห้องพักครู"],
+      2:["แผนกสาขาสามัญสัมพันธ์","ห้องเรียน 3201","3202","3203","3204","3205","3206","3207","3208","3209","3210","ห้องพักครู"],
       3:["ห้องเรียน 3301","ห้องเรียน 3302","ห้องเรียน 3303","ห้องเรียน 3304","ห้องเรียน 3305","ห้องเรียน 3306","ห้องเรียน 3307","ห้องเรียน 3308","ห้องเรียน 3309","ห้องเรียน 3310","ห้องพักครู"],
       4:["ห้องเรียน 3401","ห้องเรียน 3402","ห้องเรียน 3403","ห้องเรียน 3404","ห้องเรียน 3405","ห้องเรียน 3406","ห้องเรียน 3407","ห้องเรียน 3408","ห้องเรียน 3409","ห้องเรียน 3410","ห้องพักครู"]
     }
   },
   4: {
-    name: "อาคาร 4",
-    description: "อยู่ระหว่าง ตึก 1 กับ ตึก 2",
-    image: "images/b4.jpg",
-    lat: 13.675870998758946,
-    lng: 100.61660170555116,
-    floors: {
-      1: ["สหกรณ์วิทยาลัย", "B SHOP", "อาคารอเนกประสงค์"]
-    }
+    name: "อาคาร 4", description: "อยู่ระหว่าง ตึก 1 กับ ตึก 2", image: "images/b4.jpg",
+    lat: 13.675870998758946, lng: 100.61660170555116, floors: { 1: ["สหกรณ์วิทยาลัย", "B SHOP", "อาคารอเนกประสงค์"] }
   },
   5: {
-    name: "ตึก 5 (พลศึกษา)",
-    description: "อาคารชนะ รุ่งแสง อยู่ข้างหลังโดมหน้าเสาธง",
-    image: "images/b5.jpg",
-    lat: 13.674922,
-    lng: 100.615722,
-    floors: {
-      1: ["โรงพลศึกษา (กีฬาในร่ม)"]
-    }
+    name: "ตึก 5 (พลศึกษา)", description: "อาคารชนะ รุ่งแสง อยู่ข้างหลังโดมหน้าเสาธง", image: "images/b5.jpg",
+    lat: 13.674922, lng: 100.615722, floors: { 1: ["โรงพลศึกษา (กีฬาในร่ม)"] }
   },
   6: {
-    name: "ตึก 6",
-    description: "อยู่ข้างตึก 1",
-    image: "images/b6.png",
-    lat: 13.676308834088655,
-    lng: 100.61654269695282,
+    name: "ตึก 6", description: "อยู่ข้างตึก 1", image: "images/b6.png",
+    lat: 13.676308834088655, lng: 100.61654269695282,
     floors: {
       1:["ห้องงานพัสดุ","ห้องสำนักงานสมาคมศิษย์เก่าพณิชยการบางนา","ห้องน้ำ"],
       2:["ห้องงานสื่อการเรียนการสอน","ห้องเก็บอุปกรณ์","ห้องน้ำ"],
@@ -282,11 +338,8 @@ const buildings = {
     }
   },
   7: {
-    name: "ตึก 7",
-    description: "อยู่ข้างหลังโรงอาหารเก่า",
-    image: "images/b7.jpg",
-    lat: 13.676139,
-    lng: 100.616771,
+    name: "ตึก 7", description: "อยู่ข้างหลังโรงอาหารเก่า", image: "images/b7.jpg",
+    lat: 13.676139, lng: 100.616771,
     floors: {
       1:["ห้องปฏิบัติการขาย","7102","7102","ห้องน้ำ"],
       2:["ห้องงานพัฒนาหลักสูตรและการสอน","ห้องงานวัดผลและประเมินผล","แผนกสาขาการตลาด","ห้องน้ำครู"],
@@ -298,11 +351,8 @@ const buildings = {
     }
   },
   8: {
-    name: "ตึก 8 (อาคารเฉลิมพระเกียรติ)",
-    description: "อยู่ระหว่างตึก 9 กับ ตึก 6",
-    image: "images/b8.jpg",
-    lat: 13.676762305536153,
-    lng: 100.61601161956787,
+    name: "ตึก 8 (อาคารเฉลิมพระเกียรติ)", description: "อยู่ระหว่างตึก 9 กับ ตึก 6", image: "images/b8.jpg",
+    lat: 13.676762305536153, lng: 100.61601161956787,
     floors: {
       1:["ลานอเนกประสงค์ใช้ทำกิจกรรมต่างๆ","ห้องชมรมเลขานุการ","ห้องอธท","ห้องประชุมพันธ์ทิพย์"],
       2:["โรงอาหาร","ห้องน้ำ","ห้องอาหารครู"],
@@ -310,11 +360,8 @@ const buildings = {
     }
   },
   9: {
-    name: "ตึก 9",
-    description: "อาคารเรียนข้างตึก 8",
-    image: "images/b9.jpg",
-    lat: 13.677095893169858,
-    lng: 100.61555027961732,
+    name: "ตึก 9", description: "อาคารเรียนข้างตึก 8", image: "images/b9.jpg",
+    lat: 13.677095893169858, lng: 100.61555027961732,
     floors: {
       1:["ห้องทวิภาคี","ห้องแผนกสาขาวิชาธุรกิจค้าปลีก","ห้องเรียน 9102","ห้องน้ำ"],
       2:["สำนักงานฝ่ายแผนงาน","ห้องประชุมอาคาร 9","ห้องงานวางแผนและ งบประมาณ","ห้องงานศูนย์ข้อมูลสารสนเทศ","ห้องงานวิจัยพัฒนาและ มาตรฐานการศึกษา"],
@@ -325,46 +372,10 @@ const buildings = {
       7:["แผนกสาขาเทคโนโลยีสารสนเทศ","ห้องพักครู","ห้องเรียน 9701","ห้องเรียน 9702","ห้องเรียน 9705","ห้องเรียน 9706"]
     }
   },
-  10: {
-    name: "คูหาลูกเสือวิสามัญ",
-    description: "อยู่ข้างหลังตึก 8",
-    image: "images/b10.jpg",
-    lat: 13.676903037876762,
-    lng: 100.61640322208406,
-    floors: {
-      1: ["พื้นที่อนุสรณ์"]
-    }
-  },
-  11: {
-    name: "สนามฟุตบอล",
-    description: "อยู่ข้างตึก 9",
-    image: "images/b11.jpg",
-    lat: 13.677346083584968,
-    lng: 100.61585068702699,
-    floors: {
-      1: ["สนามแข่งขัน", "แสตนด์ที่นั่ง"]
-    }
-  },
-  12: {
-    name: "โดมหน้าเสาธง",
-    description: "พื้นที่ทำกิจกรรมข้างตึก 5",
-    image: "images/b12.jpg",
-    lat:  13.675165,
-    lng: 100.615899,
-    floors: {
-      1: ["สนามกิจกรรม", "พื้นที่ออกกำลังกาย"]
-    }
-  },
-  13: {
-    name: "หน้าวิทยาลัย (ประตูทางเข้า)",
-    description: "จุดตรวจและทางเข้าหลักของวิทยาลัย",
-    image: "images/b13.png", 
-    lat: 13.676129,
-    lng: 100.615918,
-    floors: {
-      1: ["จุดรับแลกบัตร", "จุดสอบถามข้อมูล"]
-    }
-  }
+  10: { name: "คูหาลูกเสือวิสามัญ", description: "อยู่ข้างหลังตึก 8", image: "images/b10.jpg", lat: 13.676903037876762, lng: 100.61640322208406, floors: { 1: ["พื้นที่อนุสรณ์"] } },
+  11: { name: "สนามฟุตบอล", description: "อยู่ข้างตึก 9", image: "images/b11.jpg", lat: 13.677346083584968, lng: 100.61585068702699, floors: { 1: ["สนามแข่งขัน", "แสตนด์ที่นั่ง"] } },
+  12: { name: "โดมหน้าเสาธง", description: "พื้นที่ทำกิจกรรมข้างตึก 5", image: "images/b12.jpg", lat: 13.675165, lng: 100.615899, floors: { 1: ["สนามกิจกรรม", "พื้นที่ออกกำลังกาย"] } },
+  13: { name: "หน้าวิทยาลัย (ประตูทางเข้า)", description: "จุดตรวจและทางเข้าหลักของวิทยาลัย", image: "images/b13.png", lat: 13.676129, lng: 100.615918, floors: { 1: ["จุดรับแลกบัตร", "จุดสอบถามข้อมูล"] } }
 };
 
 const collegePaths = {
@@ -377,110 +388,109 @@ const collegePaths = {
     sideRoad: { lat: 13.675720, lng: 100.615714 }
 };
 
-const map = L.map('map', {
-    maxZoom: 19, 
-    minZoom: 15
-}).setView([13.675929, 100.616100], 18);
+// Mode Switcher Function
+function switchMode(mode) {
+    const btnInfo = document.getElementById("btn-mode-info");
+    const btnNav = document.getElementById("btn-mode-nav");
+    const ctrlInfo = document.getElementById("controls-mode-info");
+    const ctrlNav = document.getElementById("controls-mode-nav");
+    const viewInfo = document.getElementById("info-standalone-view");
+    const viewNav = document.getElementById("map-view");
 
-const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 20,
-    detectRetina: true,
-    attribution: '© OpenStreetMap'
-});
-
-const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 20,
-    detectRetina: true,
-    attribution: '© Esri & Contributors'
-});
-
-streetMap.addTo(map);
-
-const baseMaps = {
-    "🗺️ แผนที่ปกติ": streetMap,
-    "🛰️ ภาพถ่ายดาวเทียม": satelliteMap
-};
-L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
-
-let routeLine = null;
-let routeDecorator = null;
-const fromSelect = document.getElementById("from");
-const toSelect = document.getElementById("to");
-const bSelect = document.getElementById("buildingSelect");
-
-const redCircleIcon = L.divIcon({
-    className: 'custom-div-icon',
-    html: "<div class='red-circle-marker'></div>",
-    iconSize: [14, 14],
-    iconAnchor: [7, 7]
-});
-
-for (const id in buildings) {
-    const b = buildings[id];
-    
-    L.marker([b.lat, b.lng], { icon: redCircleIcon })
-        .addTo(map)
-        .bindPopup(`<b>${b.name}</b>`)
-        .on('click', () => showBuilding(id));
-        
-    const opt = `<option value="${id}">${b.name}</option>`;
-    fromSelect.innerHTML += opt;
-    toSelect.innerHTML += opt;
-    bSelect.innerHTML += opt;
-}
-
-// Function to select Mode (Nav vs Info)
-function selectMode(mode) {
-    document.getElementById("landingPage").style.display = "none";
-    const secNav = document.getElementById("sectionNav");
-    const secInfo = document.getElementById("sectionInfo");
-    
-    if (mode === 'nav') {
-        secNav.style.display = "block";
-        secInfo.style.display = "none";
+    if (mode === 'info') {
+        btnInfo.classList.add("active");
+        btnNav.classList.remove("active");
+        ctrlInfo.style.display = "block";
+        ctrlNav.style.display = "none";
+        viewInfo.style.display = "block";
+        viewNav.style.display = "none";
     } else {
-        secNav.style.display = "none";
-        secInfo.style.display = "block";
+        btnNav.classList.add("active");
+        btnInfo.classList.remove("active");
+        ctrlNav.style.display = "block";
+        ctrlInfo.style.display = "none";
+        viewNav.style.display = "block";
+        viewInfo.style.display = "none";
+        setTimeout(() => map.invalidateSize(), 200);
     }
 }
 
-function openLanding() {
-    document.getElementById("landingPage").style.display = "flex";
+// Render Standalone Info Mode
+function renderStandaloneBuilding(id) {
+    const container = document.getElementById("standaloneDetails");
+    if (!id || !buildings[id]) {
+        container.innerHTML = `<p style="color: #64748b; text-align: center; padding: 30px 0;">โปรดเลือกอาคารจากเมนูด้านบนเพื่อดูข้อมูลห้องเรียนและรายละเอียด</p>`;
+        return;
+    }
+    const b = buildings[id];
+    let floorHtml = '';
+    for (const f in b.floors) {
+        floorHtml += `<div style="margin-top:10px;"><b>ชั้น ${f}:</b><ul>`;
+        b.floors[f].forEach(r => { floorHtml += `<li>🚪 ${r}</li>`; });
+        floorHtml += `</ul></div>`;
+    }
+
+    container.innerHTML = `
+        <div style="text-align:center;">
+            <h2 style="color:#0d6efd; margin-bottom: 5px;">🏢 ${b.name}</h2>
+            <p style="color:#64748b; margin-top:0;">${b.description}</p>
+            ${b.image ? `<img src="${b.image}" alt="${b.name}" style="width:100%; max-height:280px; border-radius:12px; object-fit:cover; margin:15px 0;">` : ''}
+        </div>
+        <div class="modal-floor-info">
+            <h4>📋 รายการห้องทั้งหมด</h4>
+            ${floorHtml}
+        </div>
+    `;
 }
 
-function showBuilding(id, floor = null, room = null) {
+// Populate Top Dropdowns
+const fromSelect = document.getElementById("from");
+const toSelect = document.getElementById("to");
+const standaloneSelect = document.getElementById("standaloneBuildingSelect");
+
+for (const id in buildings) {
+    const b = buildings[id];
+    const opt = `<option value="${id}">${b.name}</option>`;
+    fromSelect.innerHTML += opt;
+    toSelect.innerHTML += opt;
+    standaloneSelect.innerHTML += opt;
+}
+
+// Initialize Leaflet Map
+const map = L.map('map', { maxZoom: 19, minZoom: 15 }).setView([13.675929, 100.616100], 18);
+const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 20, detectRetina: true, attribution: '© OpenStreetMap' });
+const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 20, detectRetina: true, attribution: '© Esri' });
+
+streetMap.addTo(map);
+L.control.layers({ "🗺️ แผนที่ปกติ": streetMap, "🛰️ ภาพถ่ายดาวเทียม": satelliteMap }, null, { position: 'topright' }).addTo(map);
+
+let routeLine = null;
+let routeDecorator = null;
+const redCircleIcon = L.divIcon({ className: 'custom-div-icon', html: "<div class='red-circle-marker'></div>", iconSize: [14, 14], iconAnchor: [7, 7] });
+
+for (const id in buildings) {
+    const b = buildings[id];
+    L.marker([b.lat, b.lng], { icon: redCircleIcon }).addTo(map).bindPopup(`<b>${b.name}</b>`).on('click', () => showBuilding(id));
+}
+
+function showBuilding(id) {
     const b = buildings[id];
     const modalBody = document.getElementById("modalBody");
     const overlay = document.getElementById("modalOverlay");
     
-    const searchHighlight = room ? 
-        `<div style="background:#fff3cd; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid #ffeeba;">
-            🔍 <b>พบห้อง:</b> ${room} <br> 📍 <b>ตำแหน่ง:</b> ชั้น ${floor}
-         </div>` : "";
+    let floorHtml = '<h4>📋 รายการห้องทั้งหมด</h4>';
+    for (const f in b.floors) {
+        floorHtml += `<b>ชั้น ${f}:</b><ul>`;
+        b.floors[f].forEach(r => { floorHtml += `<li>🚪 ${r}</li>`; });
+        floorHtml += `</ul>`;
+    }
 
     modalBody.innerHTML = `
         <h2>🏢 ${b.name}</h2>
         ${b.image ? `<img src="${b.image}" alt="${b.name}">` : ""}
-        ${searchHighlight}
-        <div style="text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px;">
-            <p><strong>📍 พิกัด:</strong> ${b.lat}, ${b.lng}</p>
-            <p><strong>🏠 จำนวนชั้น:</strong> ${Object.keys(b.floors).length} ชั้น</p>
-        </div>
-        <div id="floorDetail" class="modal-floor-info"></div>
-        <button class="btn-floor" onclick="toggleFloorInfo()">🔍 ดูข้อมูลชั้นและห้องทั้งหมด</button>
-        <button onclick="closeModal()" style="margin-top: 10px; background: #4dabf7;">ตกลง</button>
+        <div id="floorDetail" class="modal-floor-info">${floorHtml}</div>
+        <button onclick="closeModal()" style="margin-top: 15px; background: #4dabf7;">ตกลง</button>
     `;
-    
-    let floorHtml = '<h4>📋 รายการห้องทั้งหมด</h4>';
-    for (const f in b.floors) {
-        floorHtml += `<b>ชั้น ${f}:</b><ul>`;
-        b.floors[f].forEach(r => {
-            const style = (r === room) ? 'style="color:red; font-weight:bold;"' : '';
-            floorHtml += `<li ${style}>🚪 ${r}</li>`;
-        });
-        floorHtml += `</ul>`;
-    }
-    document.getElementById("floorDetail").innerHTML = floorHtml;
     overlay.classList.add("active");
     map.flyTo([b.lat, b.lng], 18, { animate: true, duration: 1.5 });
 }
@@ -496,146 +506,43 @@ function findRoute() {
 
     const start = buildings[startId];
     const end = buildings[endId];
-    
     let pathPoints = [ [start.lat, start.lng] ];
 
     const directPaths = [
-        "8-9", "9-8", "3-7", "7-3", "4-7", "7-4",
-        "5-12", "12-5", "9-11", "11-9", "8-11", "11-8",
-        "8-10", "10-8", "1-2", "2-1", "2-3", "3-2", "1-4", "4-1",
-        "11-10", "10-11",
-        "2-12", "12-2",   
-        "2-5", "5-2",     
-        "1-12", "12-1",   
-        "1-5", "5-1",     
-        "13-1", "1-13",   
-        "13-4", "4-13", 
-        "6-7", "7-6",     
-        "6-8", "8-6",     
-        "1-6", "6-1",
-        "2-4", "4-2",
-        "3-4", "4-3",
-        "6-4", "4-6"
+        "8-9", "9-8", "3-7", "7-3", "4-7", "7-4", "5-12", "12-5", "9-11", "11-9", "8-11", "11-8",
+        "8-10", "10-8", "1-2", "2-1", "2-3", "3-2", "1-4", "4-1", "11-10", "10-11", "2-12", "12-2",   
+        "2-5", "5-2", "1-12", "12-1", "1-5", "5-1", "13-1", "1-13", "13-4", "4-13", "6-7", "7-6",     
+        "6-8", "8-6", "1-6", "6-1", "2-4", "4-2", "3-4", "4-3", "6-4", "4-6"
     ];
-
     const routeKey = `${startId}-${endId}`;
 
     if (directPaths.includes(routeKey)) {
         pathPoints.push([end.lat, end.lng]);
-    } 
-    else if (routeKey === "3-5" || routeKey === "3-12" || routeKey === "4-5" || routeKey === "4-12") {
+    } else if (routeKey === "3-5" || routeKey === "3-12" || routeKey === "4-5" || routeKey === "4-12" || routeKey === "5-3" || routeKey === "12-3" || routeKey === "5-4" || routeKey === "12-4") {
         pathPoints.push([buildings["2"].lat, buildings["2"].lng]);
         pathPoints.push([end.lat, end.lng]); 
-    } 
-    else if (routeKey === "5-3" || routeKey === "12-3" || routeKey === "5-4" || routeKey === "12-4") {
-        pathPoints.push([buildings["2"].lat, buildings["2"].lng]);
-        pathPoints.push([end.lat, end.lng]); 
-    } 
-    else {
-        const upperZone = ["6", "7", "8", "9", "10", "11"];
-        const midZone = ["1", "2", "3", "4", "13"]; 
-        const bottomZone = ["5", "12"]; 
-
-        const isBothUpper = upperZone.includes(startId) && upperZone.includes(endId);
-        const isBothBottom = bottomZone.includes(startId) && bottomZone.includes(endId);
-
-        if (isBothUpper || isBothBottom) {
-            if (isBothUpper && (["8", "9", "11"].includes(startId) || ["8", "9", "11"].includes(endId))) {
-                pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
-            }
-            if (isBothBottom && (["5", "12"].includes(startId) || ["5", "12"].includes(endId))) {
-                pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
-            }
-        } else {
-            if (!upperZone.includes(startId) && upperZone.includes(endId)) {
-                if (bottomZone.includes(startId)) {
-                    if (["5", "12"].includes(startId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
-                    pathPoints.push([collegePaths.sideRoad.lat, collegePaths.sideRoad.lng]); 
-                }
-                if (["2", "3"].includes(startId)) pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
-                
-                pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
-                if (["8", "9", "11"].includes(endId)) pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
-            }
-            else if (upperZone.includes(startId) && !upperZone.includes(endId)) {
-                if (["8", "9", "11"].includes(startId)) pathPoints.push([collegePaths.topBridge.lat, collegePaths.topBridge.lng]);
-                pathPoints.push([collegePaths.junction6.lat, collegePaths.junction6.lng]);
-                pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                
-                if (["2", "3"].includes(endId)) pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
-                if (bottomZone.includes(endId)) {
-                    pathPoints.push([collegePaths.sideRoad.lat, collegePaths.sideRoad.lng]); 
-                    if (["5", "12"].includes(endId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
-                }
-            }
-            else if ((bottomZone.includes(startId) && midZone.includes(endId)) || (midZone.includes(startId) && bottomZone.includes(endId))) {
-                if (bottomZone.includes(startId)) {
-                    if (["5", "12"].includes(startId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
-                    pathPoints.push([collegePaths.sideRoad.lat, collegePaths.sideRoad.lng]);
-                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                    if (["2", "3"].includes(endId)) pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
-                } else {
-                    if (["2", "3"].includes(startId)) pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
-                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                    pathPoints.push([collegePaths.sideRoad.lat, collegePaths.sideRoad.lng]);
-                    if (["5", "12"].includes(endId)) pathPoints.push([collegePaths.path5_12.lat, collegePaths.path5_12.lng]);
-                }
-            }
-            else if (midZone.includes(startId) && midZone.includes(endId)) {
-                const frontMid = ["1", "4", "13"];
-                const backMid = ["2", "3"];
-                
-                if (frontMid.includes(startId) && backMid.includes(endId)) {
-                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                    pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
-                } else if (backMid.includes(startId) && frontMid.includes(endId)) {
-                    pathPoints.push([collegePaths.path2_3.lat, collegePaths.path2_3.lng]);
-                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                } else {
-                    pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
-                }
-            }
-        }
+    } else {
+        pathPoints.push([collegePaths.centerMain.lat, collegePaths.centerMain.lng]);
         pathPoints.push([end.lat, end.lng]);
     }
 
-    routeLine = L.polyline(pathPoints, {
-        color: '#4dabf7', weight: 6, opacity: 0.8, dashArray: '10, 15', lineJoin: 'round'
-    }).addTo(map);
-
+    routeLine = L.polyline(pathPoints, { color: '#4dabf7', weight: 6, opacity: 0.8, dashArray: '10, 15' }).addTo(map);
     routeDecorator = L.polylineDecorator(routeLine, {
-        patterns: [
-            {
-                offset: '30px',     
-                repeat: '60px',     
-                symbol: L.Symbol.arrowHead({
-                    pixelSize: 15,  
-                    polygon: true, 
-                    pathOptions: { stroke: true, color: '#0d6efd', fillOpacity: 1, weight: 1 } 
-                })
-            }
-        ]
+        patterns: [{ offset: '30px', repeat: '60px', symbol: L.Symbol.arrowHead({ pixelSize: 15, polygon: true, pathOptions: { stroke: true, color: '#0d6efd' } }) }]
     }).addTo(map);
 
     map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
-    closeModal();
 
     let totalDistance = 0;
     for (let i = 0; i < pathPoints.length - 1; i++) {
         totalDistance += map.distance(pathPoints[i], pathPoints[i+1]);
     }
     totalDistance = Math.round(totalDistance); 
-
     let walkTimeMin = Math.ceil(totalDistance / 80); 
-    let timeText = (walkTimeMin <= 1) ? "ไม่ถึง 1 นาที" : `ประมาณ ${walkTimeMin} นาที`;
 
-    document.getElementById("info").innerHTML = `
-        <b>🧭 เส้นทาง:</b> ${start.name} <br> ➜ ${end.name} <br>
-        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ccc; color: #475569; font-size: 13px;">
-            📏 ระยะทาง: <b style="color:#0d6efd;">${totalDistance} เมตร</b> <br>
-            🚶‍♂️ เดินเท้า: <b style="color:#0d6efd;">${timeText}</b>
-        </div>
+    document.getElementById("nav-info-banner").innerHTML = `
+        <b>🧭 เส้นทาง:</b> ${start.name} ➜ ${end.name} <br>
+        📏 ระยะทาง: <b style="color:#0d6efd;">${totalDistance} เมตร</b> | 🚶‍♂️ เดินเท้า: <b style="color:#0d6efd;">${walkTimeMin} นาที</b>
     `;
 }
 
@@ -667,112 +574,48 @@ function performSearch() {
     if (query === "") return;
     for (const id in buildings) {
         if (buildings[id].name.toLowerCase().includes(query)) return showBuilding(id);
-        for (const floor in buildings[id].floors) {
-            const room = buildings[id].floors[floor].find(r => r.toLowerCase().includes(query));
-            if (room) return showBuilding(id, floor, room);
-        }
     }
-}
-
-function toggleFloorInfo() {
-    const detail = document.getElementById("floorDetail");
-    const isHidden = detail.style.display === "none" || detail.style.display === "";
-    detail.style.display = isHidden ? "block" : "none";
-    document.querySelector(".btn-floor").innerText = isHidden ? "🔼 ซ่อนข้อมูลชั้น" : "🔍 ดูข้อมูลชั้นและห้อง";
 }
 
 function closeModal() { document.getElementById("modalOverlay").classList.remove("active"); }
 
 let userMarker = null;
-
 function locateMe() {
     if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission()
-            .then(permissionState => {
-                if (permissionState === 'granted') {
-                    startTracking();
-                } else {
-                    alert("⚠️ ต้องอนุญาตการเข้าถึงเข็มทิศเพื่อใช้ฟีเจอร์นี้ครับ");
-                    startTracking();
-                }
-            })
-            .catch(console.error);
-    } else {
-        startTracking();
-    }
+        DeviceOrientationEvent.requestPermission().then(state => { if (state === 'granted') startTracking(); else startTracking(); });
+    } else { startTracking(); }
 }
 
 function startTracking() {
-    map.locate({
-        setView: true, 
-        maxZoom: 18, 
-        watch: true, 
-        enableHighAccuracy: true 
-    });
-
+    map.locate({ setView: true, maxZoom: 18, watch: true, enableHighAccuracy: true });
     map.on('locationfound', (e) => {
         if (!userMarker) {
             const compassIcon = L.divIcon({
                 className: 'custom-user-marker',
-                html: `
-                    <div id="user-compass" style="
-                        width: 16px; height: 16px; 
-                        background: #20c997; 
-                        border: 2px solid white; 
-                        border-radius: 50%; 
-                        position: relative; 
-                        box-shadow: 0 0 10px rgba(32,201,151,0.6); 
-                        transition: transform 0.1s ease-out; 
-                        transform: rotate(0deg);
-                    ">
-                        <div style="
-                            position: absolute; top: -10px; left: 1px; 
-                            width: 0; height: 0; 
-                            border-left: 5px solid transparent; 
-                            border-right: 5px solid transparent; 
-                            border-bottom: 12px solid #20c997;
-                        "></div>
-                    </div>
-                `,
-                iconSize: [16, 16],
-                iconAnchor: [8, 8]
+                html: `<div id="user-compass" style="width:16px;height:16px;background:#20c997;border:2px solid white;border-radius:50%;position:relative;box-shadow:0 0 10px rgba(32,201,151,0.6);transition:transform 0.1s ease-out;"><div style="position:absolute;top:-10px;left:1px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:12px solid #20c997;"></div></div>`,
+                iconSize: [16, 16], iconAnchor: [8, 8]
             });
             userMarker = L.marker(e.latlng, { icon: compassIcon }).addTo(map).bindPopup("คุณอยู่ตรงนี้");
-        } else {
-            userMarker.setLatLng(e.latlng); 
-        }
-        document.getElementById("info").innerHTML = "📍 กำลังติดตามตำแหน่งและทิศทางของคุณ...";
+        } else { userMarker.setLatLng(e.latlng); }
+        document.getElementById("nav-info-banner").innerHTML = "📍 กำลังติดตามตำแหน่งและทิศทางของคุณ...";
     });
-
-    map.on('locationerror', (e) => {
-        alert("ไม่สามารถเข้าถึงตำแหน่งของคุณได้: " + e.message);
-    });
-
     window.addEventListener('deviceorientation', (e) => {
         let heading = e.webkitCompassHeading || Math.abs(e.alpha - 360);
         const compassEl = document.getElementById("user-compass");
-        if (compassEl && heading != null) {
-            compassEl.style.transform = `rotate(${heading}deg)`;
-        }
+        if (compassEl && heading != null) compassEl.style.transform = `rotate(${heading}deg)`;
     }, true);
 }
 
 function resetMap() {
     if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
     if (routeDecorator) { map.removeLayer(routeDecorator); routeDecorator = null; }
-    
     if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
     map.stopLocate(); 
-
     document.getElementById("search").value = "";
     document.getElementById("searchResults").innerHTML = "";
-
     document.getElementById("from").value = "";
     document.getElementById("to").value = "";
-    document.getElementById("buildingSelect").value = "";
-
-    document.getElementById("info").innerHTML = "คลิกหมุดบนแผนที่เพื่อดูข้อมูล";
-
+    document.getElementById("nav-info-banner").innerHTML = "คลิกหมุดบนแผนที่ หรือเลือกจุดเริ่มต้น-จุดหมายด้านบนเพื่อนับเส้นทาง";
     map.setView([13.675929, 100.616100], 17);
 }
 </script>
