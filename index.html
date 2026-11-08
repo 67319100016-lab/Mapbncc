@@ -216,7 +216,7 @@ button { background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; bord
 
 <body>
 
-<!-- ⬆️ ALL CONTROLS IN THE TOP HEADER -->
+<!-- ALL CONTROLS IN THE TOP HEADER -->
 <div id="top-control-panel">
     <div class="brand-header">
         <div class="brand-title">🏫 BNCC MAP</div>
@@ -228,14 +228,14 @@ button { background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; bord
         <button id="btn-mode-nav" class="top-mode-btn" onclick="switchMode('nav')">🧭 2. ดูแผนที่และนำทาง</button>
     </div>
 
-    <!-- 🏢 Mode 1 Top Controls: Select Building -->
+    <!-- Mode 1 Top Controls: Select Building -->
     <div id="controls-mode-info">
         <select id="standaloneBuildingSelect" onchange="renderStandaloneBuilding(this.value)">
             <option value="">-- เลือกอาคารที่ต้องการดูข้อมูล --</option>
         </select>
     </div>
 
-    <!-- 🧭 Mode 2 Top Controls: Navigation Inputs & Buttons -->
+    <!-- Mode 2 Top Controls: Navigation Inputs & Buttons -->
     <div id="controls-mode-nav">
         <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
             <div style="flex: 1; min-width: 160px; position: relative;">
@@ -257,7 +257,7 @@ button { background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; bord
     </div>
 </div>
 
-<!-- ⬇️ DISPLAY AREA BELOW TOP CONTROLS -->
+<!-- DISPLAY AREA BELOW TOP CONTROLS -->
 <div id="main-display-container">
     
     <!-- Mode 1 Display: Pure Information View (No Map) -->
@@ -288,6 +288,13 @@ button { background: linear-gradient(135deg,#6dbdff,#4dabf7); color: white; bord
 </div>
 
 <script>
+// Service Worker Registration for PWA compliance
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW reg error:', err));
+  });
+}
+
 const buildings = {
   1: {
     name: "ตึก 1 (อาคารสุนีย์ นิมมานเหมินท์)", description: "ตึกหน้าทางเข้าของวิทยาลัย", image: "images/b1.jpg",
@@ -313,7 +320,7 @@ const buildings = {
     floors: {
       1:["ห้องอุปกรณ์งานอาคารสถานที่","ห้องชมรมอนุรักษ์ธรรมชาติและสิ่งแวดล้อม","ห้องพยาบาล","ห้องเรียน 3101,3102","ห้องงานแนะแนวอาชีพและการจัดหางาน","ห้องงานอาคารสถานที่","ห้องงานโครงการพิเศษและบริการชุมชนและห้องพักครู"],
       2:["แผนกสาขาสามัญสัมพันธ์","ห้องเรียน 3201","3202","3203","3204","3205","3206","3207","3208","3209","3210","ห้องพักครู"],
-      3:["ห้องเรียน 3301","ห้องเรียน 3302","ห้องเรียน 3303","ห้องเรียน 3304","ห้องเรียน 3305","ห้องเรียน 3306","ห้องเรียน 3307","ห้องเรียน 3308","ห้องเรียน 3309","ห้องเรียน 3310","ห้องพักครู"],
+      3:["ห้องเรียน 3301","ห้องเรียน 3302","ห้องเรียน 3303","ห้องเรียน 3304","ห้องเรียน 3305","ห้องเรียน 3306","ห้องเรียน 3307","ห้องเรียน 3308","ห้องเรียน 3309","ห้องเรียน 3410","ห้องพักครู"],
       4:["ห้องเรียน 3401","ห้องเรียน 3402","ห้องเรียน 3403","ห้องเรียน 3404","ห้องเรียน 3405","ห้องเรียน 3406","ห้องเรียน 3407","ห้องเรียน 3408","ห้องเรียน 3409","ห้องเรียน 3410","ห้องพักครู"]
     }
   },

@@ -1,15 +1,35 @@
 {
+  "id": "/Mapbncc/",
   "name": "BNCC MAP - แผนที่วิทยาลัยพณิชยการบางนา",
   "short_name": "BNCC Map",
+  "description": "แอปพลิเคชันค้นหาข้อมูลอาคารและระบบนำทางแผนที่ภายในวิทยาลัยพณิชยการบางนา",
   "start_url": "index.html",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#f7f9fc",
   "theme_color": "#4dabf7",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2232/2232688.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2232/2232688.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "BNCC Map Main Screen"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2232/2232688.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "BNCC Map Desktop Screen"
     }
   ]
 }
